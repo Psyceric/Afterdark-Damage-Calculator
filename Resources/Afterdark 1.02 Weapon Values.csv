@@ -1,0 +1,67 @@
+Weapon Name,Damage Roll,CP,Weapon Tags,Weapon Catagory,Magazine Size
+Dusters,3d4,1,"One-Handed, Blunt, Brawling",Brawling,N/A
+Punch Knife,3d4,1,"One-Handed, Piercing, Brawling",Brawling,N/A
+Small Improvised Weapon,3d4,2,"One-Handed, Thrown (25/50)",Brawling,N/A
+Large Improvised Weapon,5d4,2,Two-Handed,Brawling,N/A
+Small Knife,3d4,1,"One-Handed, Thrown (25/50)",Knives,N/A
+Combat Knife,3d4,1,"One-Handed, Piercing",Knives,N/A
+Huge Knife,3d4,1,"One-Handed, Cleaving",Knives,N/A
+Survival Knife,2d4,1,"One-Handed, Wieldy",Knives,N/A
+Shortsword,1d6,1,"One-Handed, Wieldy",Swords,N/A
+Rapier,2d6,1,"One-Handed, Piercing",Swords,N/A
+Longsword,2d6,1,Flexible,Swords,N/A
+Greatsword,6d6,2,"Two-Handed, Cleaving",Swords,N/A
+Javelin,5d6,2,"One-Handed, Thrown (25/50)",Polearms,N/A
+Spear,1d6,1,"Flexible, Reach",Polearms,N/A
+Pike,2d6,1,"Two-Handed, Reach, Piercing",Polearms,N/A
+Halberd,5d6,2,"Two-Handed, Reach, Cleaving",Polearms,N/A
+Handaxe,4d8,2,"One-Handed, Thrown (25/50)",Axes,N/A
+Wood/Fire Axe,4d8,2,Flexible,Axes,N/A
+Battleaxe,5d8,3,"Flexible, Cleaving",Axes,N/A
+Greataxe,7d8,3,"Two-Handed, Cleaving",Axes,N/A
+Throwing Stick,4d6,2,"One-Handed, Thrown (25/50), Blunt",Staves,N/A
+Baton,2d6,1,"One-Handed, Blunt",Staves,N/A
+Quarterstaff,4d6,2,"Flexible, Blunt",Staves,N/A
+Monk Staff,5d6,3,"Flexible, Reach, Blunt",Staves,N/A
+Mace,3d6,1,"Two-Handed, Blunt",Maces,N/A
+Club,4d6,2,"Flexible, Blunt",Maces,N/A
+Flail,3d6,2,"Flexible, Reach, Blunt",Maces,N/A
+Warhammer,5d6,2,"Two-Handed, Blunt, Cleaving",Maces,N/A
+Hunt Whip,2d4,1,"One-Handed, Reach, Whip",Whips,N/A
+Snake Whip,4d4,2,"One-Handed, Reach, Piercing, Whip",Whips,N/A
+Bullwhip,4d4,2,"One-Handed, Reach, Blunt, Whip",Whips,N/A
+Stockwhip,4d4,2,"One-Handed, Reach, Cleaving, Whip",Whips,N/A
+Drill,5d8,2,"One-Handed, Cleaving, Motorized",Motorized,N/A
+Hand Taser,2d8,1,"One-Handed, Piercing, Motorized",Motorized,N/A
+Chain Saw,8d8,3,"Two-Handed, Cleaving, Motorized",Motorized,N/A
+Flamethrower,4d8,2,"Two-Handed, Ranged (25/50), Incendiary, Motorized",Motorized,N/A
+RPG,7d8,4,"Two-Handed, Ranged (50/100), Explosive, Motorized",Motorized,N/A
+Recurve Bow,5d6,2,"Two-Handed, Cleaving, Archery, Ranged (25/50)",Archery ,N/A
+Compound Bow,2d6,1,"Two-Handed, Archery, Ranged (50/100)",Archery ,N/A
+Hand-Crossbow,4d6,2,"One-Handed, Piercing, Archery, Ranged (25/50)",Archery ,N/A
+Crossbow,5d6,3,"Two-Handed, Piercing, Archery, Ranged (100/200)",Archery ,N/A
+Pistol,2d4,1,"One-Handed, Wieldy, Ranged (25/50)",Handguns,15
+Revolver,4d4,1,"One-Handed, Ranged (50/100)",Handguns,6
+Hand Cannon,7d4,2,"One-Handed, Ranged (50/100)",Handguns,6
+"Machine-
+Pistol",2d4,1,"One-Handed, Wieldy, Automatic, Ranged (15/30)",Handguns,15
+Front Loaded SMG,2d4,1,"Two-Handed, Automatic, Ranged (50/100)",SMGs,30
+Back Loaded SMG,3d4,1,"Two-Handed, Automatic, Ranged (25/50)",SMGs,30
+Grip Loaded SMG,6d4,2,"One-Handed, Automatic, Ranged (25/50)",SMGs,15
+Top Loaded SMG,1d4,1,"Two-Handed, Wieldy, Automatic, Ranged (15/30)",SMGs,50
+Carbine,2d6,1,"Two-Handed, Wieldy, Ranged (50/100)",Assault Rifles,6
+Battle Rifle,3d6,1,"Two-Handed, Ranged (100/200)",Assault Rifles,6
+Bullpup,2d6,1,"Two-Handed, Automatic, Ranged (25/50)",Assault Rifles,30
+Assault Rifle,4d6,2,"Two-Handed, Automatic, Ranged (50/100)",Assault Rifles,30
+Light Machine Gun,4d6,2,"Two-Handed, Automatic, Ranged (25/50)",Machine Gun,50
+Medium Machine Gun,6d6,3,"Two-Handed, Automatic, Ranged (25/50)",Machine Gun,50
+Heavy Machine Gun,8d6,3,"Mounted, Automatic, Ranged (50/100)",Machine Gun,50
+Gatling Gun,9d6,3,"Mounted, Automatic, Ranged (25/50)",Machine Gun,50
+Hunting Rifle,2d8,1,"Two-Handed, Ranged (100/200)",Sniper Rifle,6
+Long Range Battle Rifle,4d8,2,"Two-Handed, Ranged (200/400)",Sniper Rifle,6
+Scout Rifle,2d8,1,"Two-Handed, Ranged (50/100)",Sniper Rifle,15
+Anti-Material Rifle,8d8,3,"Two-Handed, Ranged (200/400)",Sniper Rifle,1
+Break Action Shotgun,6d8,1,"Two-Handed, Ranged (15/30)",Shotgun,2
+Pump Action Shotgun,7d8,2,"Two-Handed, Ranged (25/50)",Shotgun,6
+Sawed-Off Shotgun,5d8,1,"One-Handed, Ranged (15/30)",Shotgun,2
+Auto Shotgun,3d8,1,"Two-Handed, Automatic, Ranged (15/30)",Shotgun,15
