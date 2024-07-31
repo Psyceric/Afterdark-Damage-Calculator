@@ -43,8 +43,7 @@ Crossbow,5d6,3,"Two-Handed, Piercing, Archery, Ranged (100/200)",Archery ,N/A
 Pistol,2d4,1,"One-Handed, Wieldy, Ranged (25/50)",Handguns,15
 Revolver,4d4,1,"One-Handed, Ranged (50/100)",Handguns,6
 Hand Cannon,7d4,2,"One-Handed, Ranged (50/100)",Handguns,6
-"Machine-
-Pistol",2d4,1,"One-Handed, Wieldy, Automatic, Ranged (15/30)",Handguns,15
+"Machine-Pistol",2d4,1,"One-Handed, Wieldy, Automatic, Ranged (15/30)",Handguns,15
 Front Loaded SMG,2d4,1,"Two-Handed, Automatic, Ranged (50/100)",SMGs,30
 Back Loaded SMG,3d4,1,"Two-Handed, Automatic, Ranged (25/50)",SMGs,30
 Grip Loaded SMG,6d4,2,"One-Handed, Automatic, Ranged (25/50)",SMGs,15
