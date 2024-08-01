@@ -1,57 +1,59 @@
 from tkinter import *
 from main import *
+#(Variable name, Default Value)
+userVariables = [
+    ("Weapon Level" , 1),
+    ("To Hit Bonus" , 0), 
+    ("Damage Modifier" , 0),
+    ("Number of Attacks" , 0)
+]
+userVarEntrys = []
 
-statLabels = ["Weapon Level","To Hit Bonus","Damage Modifier","Number of Attacks"]
-defaultValues = [1,0,0,0]
+#Initilize Application, and frame contrainer
+root = Tk()
+root.title("Afterdark™ Damage Per Turn Calculator")
+frame = Frame(root, bg = "white", relief=FLAT)
+frame.pack(side=TOP, anchor=NW, expand=True)
 
-def isDigits(input):
+#Callback function for Digits
+def is_digits(input):
     if input.isdigit() or input == "":
         return True
     else:
         return False
-    
-root = Tk()
-root.title("Afterdark™ Damage Per Turn Calculator")
-root.geometry('550x200')
-reg = root.register(isDigits)
+isDigitRegister = root.register(is_digits)
 
-frame = Frame(root, bg = "white", relief=FLAT)
-frame.pack(side=TOP, anchor=NW, expand=True)
+#Creates Entry Fields for User Variables
+for i in range(len(userVariables)):
 
-statEntrys = []
-for i in range(len(statLabels)):
-    label = Label(frame, text=statLabels[i], width=15, bg="white")
+    #Create Labels and Entries in rows
+    label = Label(frame, text=userVariables[i][0], width=15, bg="white")
     entry = Entry(frame, justify=CENTER, width=15, bg="white", bd=3)
     label.grid(row=0, column=i, sticky=EW, padx=1)
     entry.grid(row=1, column=i, sticky=EW, padx=10, pady=2)
-    entry.config(validate="key",validatecommand=(reg,'%P'))
-    entry.insert(0,defaultValues[i])
-    statEntrys.append(entry)
-def outputTest():
-    if statEntrys:
+
+
+    #Assign Callback, limit entry to digits only
+    entry.config(validate="key",validatecommand=(isDigitRegister,'%P'))
+    entry.insert(0,userVariables[i][1])
+
+
+    #Add Entry to list of Entries
+    userVarEntrys.append(entry)
+
+#Prints User Variables
+def get_user_variables():
+    if userVarEntrys:
         entries = []
-        for i in range(len(statEntrys)):
-            entry = statEntrys[i].get()
+        for i in range(len(userVarEntrys)):
+            entry = userVarEntrys[i].get()
             if entry:
                 entries.append(entry)
         print(entries)
 
-calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=outputTest)
-calcBtn.grid(row=0, column= 5, rowspan=2, sticky=NSEW, padx=(25,0))
+#Create Calculate Button and Connecty to get_user_variables method
+calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=get_user_variables)
+calcBtn.grid(row=0, column= len(userVariables)+1, rowspan=2, sticky=NSEW, padx=(25,0))
 
-
-# toHitLable = Label(root, text = "Additonal To Hit")
-# toHitLable.grid(column=2,row=0)
-
-# attackNumLable = Label(root, text = "Number Of Attacks")
-# attackNumLable.grid(column=3,row=0)
-
-# damageModLabel = Label(root, text = "Damage Modifier")
-# damageModLabel.grid(column=4,row=0)
-
-# root.grid_columnconfigure(5,minsize=100)
-
-# damageModLabel = Button(root, text = "Calculate", fg="black")
-# damageModLabel.grid(column=9,row=0)
-
+#Loops
 root.mainloop()

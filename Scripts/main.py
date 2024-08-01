@@ -1,25 +1,29 @@
 import csv, os, re, math
 
 weapon_list = []
-fileName = './resources/Afterdark 1.02 Weapon Values.csv'
 
 def main():
     initilizeWeaponList()
 
+
 def initilizeWeaponList():
+    #Get all weapons from CSV File
+    fileName = './resources/Afterdark 1.02 Weapon Values.csv'
     path = os.getcwd()
     parentDirectory = os.path.abspath(os.path.join(path,os.pardir))
     resourcePath = os.path.abspath(os.path.join(parentDirectory,fileName))
-    print(resourcePath)
+    print("Attempting to Validate Weapon CSV File at :\n" , resourcePath.strip(),"\n")
+    #Validate that resourcePath exists
+    if not os.path.isfile(resourcePath):
+        raise Exception("Weapon CSV Unable to be located. : " + fileName)         
+    print("Sucessfully Located Weapon CSV File! Continuing...")
     
     with open(resourcePath, 'r') as csvfile:
         csvreader = csv.DictReader(csvfile)
         for row in csvreader:
             weapon_list.append(row)
             parse_weapon(row)
-            level_weapon(row,4)     #- For testing immedietly level to 4
-            print(row,"\n")         #- GET DICT TO PRINT
-
+            #print(row)
 def parse_weapon(Weapon):
     verify_weapon(Weapon)
     baseDamage = get_base_damage(Weapon)
@@ -61,9 +65,9 @@ def get_base_damage(Weapon):
 def level_weapon(Weapon, level):
     defaultDamage = get_damage_dice(Weapon['Default Damage'])
     Weapon['_level'] = level
-    
+
     diceFaceMod = min(math.floor(level/2),2)
-    diceFace = math.min(int(defaultDamage[1]) + diceFaceMod*2,12)
+    diceFace = min(int(defaultDamage[1]) + diceFaceMod*2,12)
     diceQuantityMod = level-diceFaceMod
     diceQuantity = int(defaultDamage[0]) + diceQuantityMod
     Weapon['Damage Dice'] = [diceQuantity,diceFace]
