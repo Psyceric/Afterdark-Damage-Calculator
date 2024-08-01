@@ -6,7 +6,6 @@ fileName = './resources/Afterdark 1.02 Weapon Values.csv'
 def main():
     initilizeWeaponList()
 
-
 def initilizeWeaponList():
     path = os.getcwd()
     parentDirectory = os.path.abspath(os.path.join(path,os.pardir))
@@ -62,9 +61,9 @@ def get_base_damage(Weapon):
 def level_weapon(Weapon, level):
     defaultDamage = get_damage_dice(Weapon['Default Damage'])
     Weapon['_level'] = level
-
+    
     diceFaceMod = min(math.floor(level/2),2)
-    diceFace = int(defaultDamage[1]) + diceFaceMod*2
+    diceFace = math.min(int(defaultDamage[1]) + diceFaceMod*2,12)
     diceQuantityMod = level-diceFaceMod
     diceQuantity = int(defaultDamage[0]) + diceQuantityMod
     Weapon['Damage Dice'] = [diceQuantity,diceFace]
