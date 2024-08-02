@@ -49,29 +49,22 @@ def parse_weapon(Weapon):
 
     defaultDice = Weapon.get('Default Damage')
     validate_dice(defaultDice)
-    Weapon['_level'] = 1
-    Weapon['_damageDice'] = get_damage_dice(defaultDice)
-    Weapon['_tagDamage'] = tagDamage
-    Weapon['_damageModifier'] = damageModifier
-    Weapon['_toHitBonus'] = toHitBonus
+    WeaponStats = {}
+    WeaponStats['_level'] = 1
+    WeaponStats['_damageDice'] = get_damage_dice(defaultDice)
+    WeaponStats['_tagExtraDice'] = tagDamage
+    WeaponStats['_damageModifier'] = damageModifier
+    WeaponStats['_toHitBonus'] = toHitBonus
+    Weapon['_weaponStats'] = WeaponStats
     #TODO: ['_damagePerAttack']
     #TODO: ['_damagePerTurn'] and create Function 
-    
-    # print(
-    #     "{0}{1} | {2} : {3} |\tBase Damage: {4}".format(   #Prints Default Weapon Stats
-    #         Weapon['Weapon Name'],                         #{0}                       |
-    #         " " * (25 - len(Weapon['Weapon Name'])),       #{1}       Does Not        |
-    #         Weapon['Default Damage'],                      #{2}  Include Range/Ammo   |
-    #         Weapon['_tagDamage'],                          #{3}                       |
-    #         Weapon['_baseDamage'])                         #{4}______________________/
-    # )
 
-def get_base_damage(Dice : str | tuple):
+def get_base_damage(Dice : str | tuple, diceMod : int):
     if type(Dice) is str : 
         damageTPL = get_damage_dice(Dice)
     else: 
         damageTPL = Dice
-    dmgCalc = (int(damageTPL[0]) * (int(damageTPL[1])+1) / 2)
+    dmgCalc = ((int(damageTPL[0]) + diceMod) * (float(damageTPL[1])+1) / 2)
     return (str(dmgCalc).zfill(4))
 
 def get_damage_dice(Dice : str): 
@@ -106,9 +99,19 @@ def level_weapon(Weapon : dict, level : int) -> tuple:
     diceFace = min(int(defaultDamage[1]) + diceFaceMod*2,12)
     
     newDice = (diceQuantity,diceFace)
-    Weapon['_level'] = level
-    Weapon['_damageDice'] = newDice
+    Weapon['_weaponStats']['_level'] = level
+    Weapon['_weaponStats']['_damageDice'] = newDice
+    print("Leveling {0} - To Lvl {1}".format(Weapon['Weapon Name'], level))
     return newDice
+
+def get_per_atk(weapon : dict, userInfo):
+    if not weapon: raise Exception("Invalid Weapon Dict - Check if Initialized")
+    weaponStats = weapon['_weaponStats']
+    damageDice = weaponStats['_damageDice']
+    baseDamage = get_base_damage(damageDice, weaponStats['_tagExtraDice'])
+    damagePerAttack = float(baseDamage) + (float(weaponStats['_damageModifier']) + float(userInfo['Damage Modifier']))
+    return damagePerAttack    
+
 
 if __name__ == "__main__":
     main()
