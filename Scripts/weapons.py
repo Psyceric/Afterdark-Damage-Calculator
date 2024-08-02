@@ -2,10 +2,6 @@ import csv, os, re, math
 
 weapon_list = []
 
-def main():
-    initilizeWeaponList()
-
-
 def initilizeWeaponList():
     #Get all weapons from CSV File
     fileName = './resources/Afterdark 1.02 Weapon Values.csv'
@@ -47,7 +43,8 @@ def parse_weapon(Weapon):
             case "Wieldy":
                 toHitBonus += 1
 
-    defaultDice = Weapon.get('Default Damage')
+    defaultDice = Weapon['Default Damage']
+
     validate_dice(defaultDice)
     WeaponStats = {}
     WeaponStats['_level'] = 1
@@ -55,8 +52,8 @@ def parse_weapon(Weapon):
     WeaponStats['_tagExtraDice'] = tagDamage
     WeaponStats['_damageModifier'] = damageModifier
     WeaponStats['_toHitBonus'] = toHitBonus
+    WeaponStats['_damagePerAttack'] = get_base_damage(defaultDice,damageModifier)
     Weapon['_weaponStats'] = WeaponStats
-    #TODO: ['_damagePerAttack']
     #TODO: ['_damagePerTurn'] and create Function 
 
 def get_base_damage(Dice : str | tuple, diceMod : int):
@@ -100,8 +97,7 @@ def level_weapon(Weapon : dict, level : int) -> tuple:
     
     newDice = (diceQuantity,diceFace)
     Weapon['_weaponStats']['_level'] = level
-    Weapon['_weaponStats']['_damageDice'] = newDice
-    print("Leveling {0} - To Lvl {1}".format(Weapon['Weapon Name'], level))
+    Weapon['_weaponStats']['_damageDice'] = newDice 
     return newDice
 
 def get_per_atk(weapon : dict, userInfo):
@@ -111,8 +107,3 @@ def get_per_atk(weapon : dict, userInfo):
     baseDamage = get_base_damage(damageDice, weaponStats['_tagExtraDice'])
     damagePerAttack = float(baseDamage) + (float(weaponStats['_damageModifier']) + float(userInfo['Damage Modifier']))
     return damagePerAttack    
-
-
-if __name__ == "__main__":
-    main()
-
