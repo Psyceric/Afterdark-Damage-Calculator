@@ -47,14 +47,12 @@ def parse_weapon(Weapon):
 
     validate_dice(defaultDice)
     WeaponStats = {}
-    WeaponStats['_level'] = 1
-    WeaponStats['_damageDice'] = get_damage_dice(defaultDice)
-    WeaponStats['_tagExtraDice'] = tagDamage
-    WeaponStats['_damageModifier'] = damageModifier
-    WeaponStats['_toHitBonus'] = toHitBonus
-    WeaponStats['_damagePerAttack'] = get_base_damage(defaultDice,damageModifier)
-    Weapon['_weaponStats'] = WeaponStats
-    #TODO: ['_damagePerTurn'] and create Function 
+    Weapon['_level'] = 1
+    Weapon['_damageDice'] = get_damage_dice(defaultDice)
+    Weapon['_tagExtraDice'] = tagDamage
+    Weapon['_damageModifier'] = damageModifier
+    Weapon['_toHitBonus'] = toHitBonus
+    Weapon['_damagePerAttack'] = get_base_damage(defaultDice,damageModifier)
 
 def get_base_damage(Dice : str | tuple, diceMod : int):
     if type(Dice) is str : 

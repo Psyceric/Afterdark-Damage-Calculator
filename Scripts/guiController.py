@@ -73,7 +73,6 @@ def merge(dict1, dict2):
 
 def __init__():
     weapons.initilizeWeaponList()
-    
     #Initilize Application, and frame contrainer
     root = Tk()
     root.title("Afterdark™ Damage Per Turn Calculator")
@@ -82,19 +81,32 @@ def __init__():
     #Create Frame for holding Table Data
     tableFrame = Frame(root, bg = "white", relief=FLAT)
     tableFrame.pack(side=TOP, anchor=NW,expand=True)
-    cols = []
-    combinedWeaponsList = merge(weapons.weapon_list[0] , weapons.weapon_list[0]['_weaponStats'])
-    for ele in combinedWeaponsList.items():
-        if not isinstance(ele[1],dict) and not ele[0] == "Weapon Name":
-            cols.append(ele[0])
 
+    #Create list of all Columns without Weapon Name
+    cols = list(weapons.weapon_list[0].keys())
+    del cols[0]
+
+    #Create Table Object
     table = ttk.Treeview(tableFrame, columns=cols)
-    for eachcol in cols:
-        table.heading(column=eachcol, text=eachcol)
-        table.column(column=eachcol, width=100, minwidth=30)
+
+    #Modifies "Icon Column" - Must be Named #0 when refrenced
+    table.heading("#0", text=list(weapons.weapon_list[0].keys())[0]) 
+    table.column("#0",width=180, minwidth= 100)
+
+    ##Create All Available Columns
+    for ele in cols:
+        table.heading(column=ele, text=ele)
+        table.column(column=ele, width=110, minwidth=10)
+
+    #Populates Table
+    for count, ele in enumerate(weapons.weapon_list):
+        _weapon = list(ele.values())
+        del _weapon[0]
+        print("item", count , " --- ", _weapon)
+        table.insert('', END, text=ele['Weapon Name'], values = _weapon)
         
-    table.heading("#0", text="Weapon Name")
-    table.column('#0', width=0, minwidth=0)
+
+
 
     table.pack(side=TOP, anchor=NW, expand=True ,fill=BOTH)
     
