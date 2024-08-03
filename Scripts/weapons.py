@@ -1,6 +1,7 @@
 import csv, os, re, math
 
 weapon_list = []
+BLUNT_MOD = 4
 
 def initilizeWeaponList():
     #Get all weapons from CSV File
@@ -25,6 +26,17 @@ def initilizeWeaponList():
             weapon_list.append(row)
             parse_weapon(row)
 
+def hasTags(weapon, *keywords : str): 
+    allTags = weapon['Weapon Tags'].split(', ')
+    returnTags = []
+    returnValue = True
+    for keyword in keywords: #blunt, two-handed
+        if not "Blunt" in allTags:
+            #print("Unable to find tag {0} in weapon {1}".format(keyword, weapon['Weapon Name']))
+            returnValue = False
+            returnTags.append(keyword)
+    return (returnValue, returnTags)
+
 def parse_weapon(Weapon):
     tagDamage = 0.0
     damageModifier = 0.0
@@ -39,7 +51,7 @@ def parse_weapon(Weapon):
             case "Flexible"|"Cleaving"|"Piercing"|"Incindiary"|"Explosive":
                 tagDamage += 1
             case "Blunt":
-                damageModifier += 4
+                damageModifier += BLUNT_MOD
             case "Wieldy":
                 toHitBonus += 1
 
