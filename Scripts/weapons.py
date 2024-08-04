@@ -122,7 +122,6 @@ def get_per_atk(weapon : dict, userInfo):
     baseDamage = get_base_damage(weapon['_damageDice'], weapon['_tagExtraDice'])
     
     weapon['_damageModifer'] = (float(weapon['_damageModifier']) + float(userInfo['Damage Modifier']))
-    print(baseDamage, ' - ', weapon[''])
     
     damagePerAttack = float(baseDamage) + weapon['_damageModifier']
     return '%f' % damagePerAttack    
