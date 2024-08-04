@@ -1,6 +1,37 @@
 from tkinter import *
 from tkinter import ttk
+from functools import partial
+import datetime as objDateTime
 import weapons
+
+class MyTreeview(ttk.Treeview):
+    def heading(self, column, sort_by=None, **kwargs):
+        if sort_by and not hasattr(kwargs, 'command'):
+            func = getattr(self, f"_sort_by_{sort_by}", None)
+            if func:
+                kwargs['command'] = partial(func, column, False)
+        return super().heading(column, **kwargs)
+
+    def _sort(self, column, reverse, data_type, callback):
+        l = [(self.set(k, column), k) for k in self.get_children('')]
+        l.sort(key=lambda t: data_type(t[0]), reverse=reverse)
+        for index, (_, k) in enumerate(l):
+            self.move(k, '', index)
+        self.heading(column, command=partial(callback, column, not reverse))
+
+    def _sort_by_num(self, column, reverse):
+        self._sort(column, reverse, int, self._sort_by_num)
+
+    def _sort_by_name(self, column, reverse):
+        self._sort(column, reverse, str, self._sort_by_name)
+
+    def _sort_by_date(self, column, reverse):
+        def _str_to_datetime(string):
+            return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
+        self._sort(column, reverse, _str_to_datetime, self._sort_by_date)
+    def _sort_by_float(self, column, reverse):
+        self._sort(column, reverse, float, self._sort_by_float)
+
 
 #(Variable name, Default Value)
 userVariables = {
@@ -34,7 +65,7 @@ def get_user_variables():
         curWeap = weapons.weapon_list[i]
         weapons.level_weapon(curWeap,int(entries['Weapon Level']))
         dmgPerAtk = weapons.get_per_atk(curWeap,entries)
-        weapons.weapon_list[i]['_weaponStats']['_damagePerAttack'] = dmgPerAtk
+        weapons.weapon_list[i]['_damagePerAttack'] = dmgPerAtk
         print("{0} | Damage Per Attack - {1}".format(curWeap['Weapon Name'],dmgPerAtk))
 
 def generate_table(frame, table):
@@ -86,7 +117,6 @@ def __init__():
 
     #Create list of all Columns without Weapon Name
     cols = list(weapons.weapon_list[0].keys())
-    del cols[0]
 
 
 
@@ -104,7 +134,7 @@ def __init__():
     myStyle.configure('my.Treeview.Heading', background='gray', font=('Calibri Bold', 10), relief='none')
 
         #Create Table Object
-    table = ttk.Treeview(tableFrame, columns=cols, height= 32, selectmode=BROWSE, style='my.Treeview')
+    table = MyTreeview(tableFrame, columns=cols, height= 32, selectmode=BROWSE, style='my.Treeview')
     verScroll = Scrollbar(tableFrame, orient="vertical", command= table.yview, width= 30)
     verScroll.pack(side = 'right', fill=BOTH, padx=2, pady=2)
 
@@ -114,86 +144,99 @@ def __init__():
     
 
     #Modifies "Icon Column" - Must be Named #0 when refrenced
-    table.heading("#0", text=list(weapons.weapon_list[0].keys())[0]) 
-    table.column("#0",width=180, minwidth= 100)
+    table.heading("#0",sort_by='name', text=list(weapons.weapon_list[0].keys())[0]) 
+    table.column("#0",width=0, minwidth= 0, stretch=False)
 
     ##Create All Available Columns
     for count, ele in enumerate(cols):
-        head_kwarg = {'text' : ele}
-        col_kwarg  = {'anchor': 'e', 'width' : 100, 'minwidth' : 30, 'stretch' : True}
-
+        #Default Row Parameters
+        head_kwarg = {'sort_by' : 'name','text' : ele}
+        col_kwarg  = {'anchor': 'c', 'width' : 80, 'minwidth' : 60, 'stretch' : True}
+        print(ele)
+        #Row Parameters
         match ele: 
+            case "Weapon Name":
+                col_kwarg['width'] = 240
+                col_kwarg['minwidth'] = 240
             case "Default Damage":
                 head_kwarg['text'] = "Base Roll"
-                col_kwarg['anchor'] = 'c'
-                col_kwarg['width'] = 80
-                col_kwarg['minwidth'] = 60
             case "CP": 
-                col_kwarg['anchor'] = 'c'
                 col_kwarg['width'] = 40
                 col_kwarg['minwidth'] = 30
+
             case "Weapon Tags":
                 col_kwarg['width'] = 300
                 col_kwarg['minwidth'] = 300
+
             case "Magazine Size":
-                col_kwarg['anchor'] = 'c'
                 col_kwarg['width'] = 90
                 col_kwarg['minwidth'] = 90
+
             case "Weapon Catagory":
-                col_kwarg['anchor'] = 'c'
                 col_kwarg['width'] = 120
                 col_kwarg['minwidth'] = 120
+
             case "_level":
                 head_kwarg['text'] = "Level"
-                col_kwarg['anchor'] = 'c'
-                col_kwarg['width'] = 60
-                col_kwarg['minwidth'] = 40
+
             case "_damageDice":
                 head_kwarg['text'] = "Damage Dice"
-                col_kwarg['anchor'] = 'c'
-                col_kwarg['width'] = 80
                 col_kwarg['minwidth'] = 80
+
             case "_tagExtraDice":
                 head_kwarg['text'] = "Tag Damage"
-                col_kwarg['anchor'] = 'c'
-                col_kwarg['width'] = 80
                 col_kwarg['minwidth'] = 80
+
             case "_damageModifier":
                 head_kwarg['text'] = "Damage Mod"
-                col_kwarg['anchor'] = 'c'
+                head_kwarg['sort_by'] = "name"
                 col_kwarg['width'] = 90
                 col_kwarg['minwidth'] = 90
+
             case "_toHitBonus":
                 head_kwarg['text'] = "To Hit"
-                col_kwarg['anchor'] = 'c'
+                head_kwarg['sort_by'] = "num"
                 col_kwarg['width'] = 50
                 col_kwarg['minwidth'] = 50
+
             case "_damagePerAttack":
                 head_kwarg['text'] = "Damage Per Attack"
-                col_kwarg['anchor'] = 'c'
+                head_kwarg['sort_by'] = "float"
                 col_kwarg['width'] = 140
                 col_kwarg['minwidth'] = 115
-            
+
+            case"_averageSucessfulAttacks":
+                head_kwarg['text'] = "Sucessful Attacks"
+                head_kwarg['sort_by'] = "float"
+                col_kwarg['width'] = 115
+                col_kwarg['minwidth'] = 115
+
+            case"_DPT":
+                head_kwarg['text'] = "Damage Per Turn"
+                head_kwarg['sort_by'] = "float"
+                col_kwarg['width'] = 115
+                col_kwarg['minwidth'] = 115
 
         table.heading(column=ele, **head_kwarg)
         table.column(column=ele, **col_kwarg)
-        #table.columnconfigure(count+1, weight=1)
 
     #Populates Table
     for count, ele in enumerate(weapons.weapon_list):
-        _weapon = ele
+        _weapon = dict(ele)
         _weapon['_damageDice'] = 'd'.join(_weapon['_damageDice'])
         if weapons.hasTags(ele,"Blunt")[0] == True:
-            _weapon['Default Damage'] = " + ".join((_weapon['Default Damage'], str(weapons.BLUNT_MOD)))
+            _weapon['Default Damage'] = " + ".join(((_weapon['Default Damage']), str(weapons.BLUNT_MOD)))
+
         if not ele['_damageModifier'] == 0:  
             _weapon['_damageDice'] = " + ".join((str(_weapon['_damageDice']), str(int(ele['_damageModifier']))))
-        _weapon = list(_weapon.values())
-        del _weapon[0]
-        #print("item", count , " --- ", _weapon)
-        
-        
+            
+        _weapon['_damageModifier'] = "+" + str(int(_weapon['_damageModifier']))
+        _weapon['_toHitBonus'] = "+" + str(int(_weapon['_toHitBonus']))
 
-        #= ele['Damage Dice'][0],'d',ele['Damage Dice'][1]
+        
+        _weapon = list(_weapon.values())
+
+
         rowArgs = {'values' : _weapon,'tags' : 'red'}
         match int(ele['CP']):
             case 1:
@@ -221,5 +264,5 @@ def __init__():
 
     root.mainloop()
 
-if __name__ == "__main__": 
+if __name__ == "__main__":  
     __init__()
