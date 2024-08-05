@@ -8,6 +8,8 @@ import weapons
 
 #Upgrades Treeview to handle Sorting Via Headers
 class MyTreeview(ttk.Treeview):
+
+    #Adds sort_by parameter to Headings    
     def heading(self, column, sort_by=None, **kwargs):
         if sort_by and not hasattr(kwargs, 'command'):
             func = getattr(self, f"_sort_by_{sort_by}", None)
@@ -15,29 +17,55 @@ class MyTreeview(ttk.Treeview):
                 kwargs['command'] = partial(func, column, False)
         return super().heading(column, **kwargs)
 
+    #Intakes column, Sorts column by data_type, and assigns reversed callback to header
     def _sort(self, column, reverse, data_type, callback):
-        l = [(self.set(k, column), k) for k in self.get_children('')]
+        l = [(self.set(k, column), k) for k in self.get_children('')] #For ever row, Get their Item, and their Column
         l.sort(key=lambda t: data_type(t[0]), reverse=reverse)
         for index, (_, k) in enumerate(l):
             self.move(k, '', index)
         self.heading(column, command=partial(callback, column, not reverse))
 
-    def _sort_by_num(self, column, reverse):
-        self._sort(column, reverse, int, self._sort_by_num)
+    #Intakes column, and removes all sorting
+    def _remove_sort(self, column):
+        #Changes Logic of Sort Function to restore to original order
+        l = [(self.set(k, column), k) for k in self.get_children('')]
+        l.sort(key=lambda t: str(t[1]) , reverse=False)
+        for index, (_, k) in enumerate(l):
+            self.move(k, '', index)
 
+    # Callback Function used by _sort
+    # When clicking header of a Column, Sorts table by that Columns integers.
+    def _sort_by_int(self, column, reverse):
+        self._sort(column, reverse, int, self._sort_by_int)
+
+    # Callback Function used by _sort
+    # When clicking header of a Column, Sorts table by that Columns strings.
     def _sort_by_name(self, column, reverse):
         self._sort(column, reverse, str, self._sort_by_name)
 
+    # Callback Function used by _sort
+    # When clicking header of a Column, Sorts table by that Columns dates.
     def _sort_by_date(self, column, reverse):
         def _str_to_datetime(string):
             return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
         self._sort(column, reverse, _str_to_datetime, self._sort_by_date)
 
+    # Callback Function used by _sort
+    # When clicking header of a Column, Sorts table by that Columns floats.
     def _sort_by_float(self, column, reverse):
         self._sort(column, reverse, float, self._sort_by_float)
+    
+    # Callback Funciton used by _remove_sort
+    # When right clicking Header, Remove sorting of table
+    def _on_right_click(self, event):
+        region = self.identify_region(event.x, event.y)
+        region2 = self.identify("column", event.x, event.y)
+        if region == "heading":
+            self._remove_sort(region2)
+
+### End of MyTreeView Class
 
 class userInfo(object):
-    #Global Variables
     userVariables = {
         "Weapon Level" : 1,
         "To Hit Bonus" : 0, 
@@ -46,48 +74,54 @@ class userInfo(object):
     }
     userEntryObjects = []
 
+    # Creates UserInfo Fields / Entries /
     def __init__(self, root : Tk):
-
-        #Create Tkinter Frame for userInfo buttons
+        if userInfo.userEntryObjects: raise Exception("User Entry Objects Array is Empty. Quitting.")
+        # Creates Tkinter frame
         frame = Frame(root, bg = "white", relief=FLAT)
         frame.pack(side=TOP, anchor=NW, expand=True)
 
-        #Creates Entry Fields for User Variables
-        for i in range(len(self.userVariables)):
+        
+        
+        # Creates a Lable and Entry box for Each key in userVariables
+        for count, ele in enumerate(self.userVariables.items()):
+            # Create Display Lable with Stat Name
+            label = Label(frame, text=ele[0],width=15, bg="white")
+            label.grid(row=0, column=count,sticky=EW, padx=1)
 
-            label = Label(frame, text=list(self.userVariables.keys())[i]
-                          , width=15, bg="white")
-            entry = Entry(frame, justify=CENTER, width=15, bg="white", bd=3)
-
-            label.grid(row=0, column=i, sticky=EW, padx=1)
-            entry.grid(row=1, column=i, sticky=EW, padx=10, pady=2)
-
-            #Assign Callback, limit entry to digits only
+            # Create userInfo entry object
+            entry = Entry(frame, justify=CENTER,width=15, bg="white", bd=3)
+            entry.grid(row=1, column=count,sticky=EW, padx=10, pady=2)
             isDigitRegister = root.register(self.is_digits)
             entry.config(validate="key",validatecommand=(isDigitRegister,'%P'))
-            entry.insert(0,list(self.userVariables.values())[i])
 
+            # Instantiate the Entry Box-
+            entry.insert(0,ele[1])
             self.userEntryObjects.append(entry)
 
-        #Create Calculate Button and Connecty to get_user_variables method
+        #Create Calculate Button, and assign Callback
         calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=self.get_userInfo)
         calcBtn.grid(row=0, column= len(self.userVariables)+1, rowspan=2, sticky=NSEW, padx=(25,0))
     
+    #Returns userInfo from all userInfo fields
     def get_userInfo(self):
-        if self.userEntryObjects:
-            entries = dict(self.userVariables)
-            for i in range(len(self.userEntryObjects)):
-                entry = self.userEntryObjects[i].get()
-                if entry:
-                    entries[list(entries.keys())[i]] = entry
-            return entries  
+        _userInfo = dict(self.userVariables)
+        print('Getting userInfo')
+
+        # Loops through all userEntryObjects, and saves the text entered into the Entry Objects
+        # Returns new dictionary of all user entries
+        for count, ele in enumerate(self.userEntryObjects):
+            entry = ele.get()
+            if entry:
+                _userInfo[list(_userInfo.keys())[count]] = entry
+        return _userInfo  
      
-    #Callback function for UserInfo Entry's
+    #Callback function for Entries to verify if Text is a Digit
     def is_digits(self, input):
-        if input.isdigit() or input == "":
-            return True
-        else:
-            return False
+        return (input.isdigit() or input == "")
+ #
+### End of userInfo Class
+
 
 #Update Weapons Based on User Data    
 def update_weapon_list(userInfo):
@@ -133,6 +167,8 @@ def __init__():
     
     #Create Table Object
     table = MyTreeview(tableFrame, columns=cols, height= 32, selectmode=BROWSE, style='my.Treeview')
+    table.bind("<Button-3>", table._on_right_click)
+
     verScroll = Scrollbar(tableFrame, orient="vertical", command= table.yview, width= 30)
     verScroll.pack(side = 'right', fill=BOTH, padx=2, pady=2)
     table.pack(side=TOP, anchor=NW, expand=True ,fill=BOTH)
@@ -194,7 +230,7 @@ def __init__():
 
                 case "_toHitBonus":
                     head_kwarg['text'] = "To Hit"
-                    head_kwarg['sort_by'] = "num"
+                    head_kwarg['sort_by'] = "int"
                     col_kwarg['width'] = 50
                     col_kwarg['minwidth'] = 50
 
