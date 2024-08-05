@@ -17,7 +17,7 @@ def initilizeWeaponList():
     print("Attempting to Validate Weapon CSV File at :\n" , resourcePath.strip(),"\n")
 
     #Error out if File Path is not Valid 
-    if not os.path.isfile(resourcePath):
+    if os.path.isfile(resourcePath) is None:
         raise Exception("Weapon CSV Unable to be located. : " + fileName)
              
     print("Sucessfully Located Weapon CSV File! Continuing...")
@@ -34,7 +34,7 @@ def hasTags(weapon, *keywords : str):
     returnTags = []
     returnValue = True
     for keyword in keywords: #blunt, two-handed
-        if not "Blunt" in allTags:
+        if "Blunt" not in allTags:
             #print("Unable to find tag {0} in weapon {1}".format(keyword, weapon['Weapon Name']))
             returnValue = False
             returnTags.append(keyword)
@@ -93,9 +93,8 @@ def validate_dice(Dice: str | tuple):
     #Regex that Validates number of dice of dice types {4,6,8,10,12}
     dicePattern = "^\\d{1,3}[d]([4,6,8]|]|1[0,2])$" 
 
-    #Attmepts to Validate Dice, If not Possible Error Out
-    if not (re.fullmatch(dicePattern , diceStr)) : 
-        raise TypeError("Unable to Validate Default Damage for '", diceStr, "' - of type ", type(diceStr))
+    if (re.fullmatch(dicePattern , diceStr)) is not None : 
+        return False
     #If continues, Return True
     return True
 
@@ -118,7 +117,8 @@ def level_weapon(Weapon : dict, level : int) -> tuple:
     return newDice
 
 def get_per_atk(weapon : dict, userInfo):
-    if not weapon: raise Exception("Invalid Weapon Dict - Check if Initialized")
+    if weapon is None: raise Exception("Invalid Weapon Dict - Check if Initialized")
+    
     baseDamage = get_base_damage(weapon['_damageDice'], weapon['_tagExtraDice'])
     
     weapon['_damageModifer'] = (float(weapon['_damageModifier']) + float(userInfo['Damage Modifier']))

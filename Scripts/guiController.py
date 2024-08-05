@@ -6,64 +6,68 @@ import weapons
 
 
 
-#Upgrades Treeview to handle Sorting Via Headers
 class MyTreeview(ttk.Treeview):
+    """Upgrades Tkinter Treeview to allow header sorting functionality
+    Adds multiple sort options. """
 
-    #Adds sort_by parameter to Headings    
-    def heading(self, column, sort_by=None, **kwargs):
-        if sort_by and not hasattr(kwargs, 'command'):
-            func = getattr(self, f"_sort_by_{sort_by}", None)
+    def heading(self, column, sort_type : str = None, **kwargs):
+        """Dynamically set headings Callback function using sort_type
+        If arguments 'sort_type' exists & 'command' does not exists
+        Find Function in class of sort_type 
+        If it exists assing callback function to heading"""
+        if sort_type and not hasattr(kwargs, 'command'):
+            func = getattr(self, f"_sort_by_{sort_type}", None)
             if func:
                 kwargs['command'] = partial(func, column, False)
+
+        # Bind function to Right Click callback from Tkinter Treeview
+        self.bind("<Button-3>", self._on_right_click)        
         return super().heading(column, **kwargs)
 
-    #Intakes column, Sorts column by data_type, and assigns reversed callback to header
-    def _sort(self, column, reverse, data_type, callback):
-        l = [(self.set(k, column), k) for k in self.get_children('')] #For ever row, Get their Item, and their Column
-        l.sort(key=lambda t: data_type(t[0]), reverse=reverse)
-        for index, (_, k) in enumerate(l):
-            self.move(k, '', index)
-        self.heading(column, command=partial(callback, column, not reverse))
+    def _sort(self, _column, _data_type = str, _reverse = False, _callback = None, _remove_sort : bool = False):
+        """ Sorts Treeview by Column and Data Type
+        Creats List of all row ID's 
+        Converts to list of values in a column
+        Sort list by data_type"""
+        
+        allRows = self.get_children('')
+        sortedRows = [(self.set(row, _column), row) for row in allRows]
+        sortedRows.sort(key=lambda tup: _data_type(tup[int(_remove_sort)]), reverse=_reverse)
 
-    #Intakes column, and removes all sorting
-    def _remove_sort(self, column):
-        #Changes Logic of Sort Function to restore to original order
-        l = [(self.set(k, column), k) for k in self.get_children('')]
-        l.sort(key=lambda t: str(t[1]) , reverse=False)
-        for index, (_, k) in enumerate(l):
-            self.move(k, '', index)
+        # Move each row to index it appears in sortedRows
+        # Re-assigns callback function to header with oppsite sort order
+        for index, (_, row) in enumerate(sortedRows):
+            self.move(row, '', index)
 
-    # Callback Function used by _sort
-    # When clicking header of a Column, Sorts table by that Columns integers.
+        if _remove_sort is False:
+            self.heading(_column, command=partial(_callback, _column, not _reverse))
+
     def _sort_by_int(self, column, reverse):
-        self._sort(column, reverse, int, self._sort_by_int)
+        """When clicking header, Sorts table by Columns integers."""
+        self._sort(_column = column, _data_type = int, _reverse = reverse,  _callback = self._sort_by_int)
+ 
+    def _sort_by_str(self, column, reverse):
+        """When clicking header, Sorts table by Columns strings."""
+        self._sort(_column = column, _data_type = str, _reverse = reverse,  _callback = self._sort_by_str)
 
-    # Callback Function used by _sort
-    # When clicking header of a Column, Sorts table by that Columns strings.
-    def _sort_by_name(self, column, reverse):
-        self._sort(column, reverse, str, self._sort_by_name)
-
-    # Callback Function used by _sort
-    # When clicking header of a Column, Sorts table by that Columns dates.
     def _sort_by_date(self, column, reverse):
+        """When clicking header, Sorts table by Columns dates."""
         def _str_to_datetime(string):
             return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
-        self._sort(column, reverse, _str_to_datetime, self._sort_by_date)
+        self._sort(_column = column, _reverse = reverse,  _callback = self._sort_by_date)
 
-    # Callback Function used by _sort
-    # When clicking header of a Column, Sorts table by that Columns floats.
     def _sort_by_float(self, column, reverse):
-        self._sort(column, reverse, float, self._sort_by_float)
+        """When clicking header, Sorts table by Columns floats."""
+        self._sort(_column = column, _data_type = float, _reverse = reverse,  _callback = self._sort_by_float)
     
-    # Callback Funciton used by _remove_sort
-    # When right clicking Header, Remove sorting of table
     def _on_right_click(self, event):
+        """When rightclicking identify if clicking header, and clear sort"""
         region = self.identify_region(event.x, event.y)
-        region2 = self.identify("column", event.x, event.y)
+        column = self.identify("column", event.x, event.y)
         if region == "heading":
-            self._remove_sort(region2)
-
-### End of MyTreeView Class
+            self._sort(_column = column, _remove_sort=True)
+     #
+    ### End of MyTreeView Class
 
 class userInfo(object):
     userVariables = {
@@ -76,7 +80,6 @@ class userInfo(object):
 
     # Creates UserInfo Fields / Entries /
     def __init__(self, root : Tk):
-        if userInfo.userEntryObjects: raise Exception("User Entry Objects Array is Empty. Quitting.")
         # Creates Tkinter frame
         frame = Frame(root, bg = "white", relief=FLAT)
         frame.pack(side=TOP, anchor=NW, expand=True)
@@ -119,9 +122,9 @@ class userInfo(object):
     #Callback function for Entries to verify if Text is a Digit
     def is_digits(self, input):
         return (input.isdigit() or input == "")
- #
-### End of userInfo Class
-
+    
+     #
+    ### End of userInfo Class
 
 #Update Weapons Based on User Data    
 def update_weapon_list(userInfo):
@@ -167,7 +170,6 @@ def __init__():
     
     #Create Table Object
     table = MyTreeview(tableFrame, columns=cols, height= 32, selectmode=BROWSE, style='my.Treeview')
-    table.bind("<Button-3>", table._on_right_click)
 
     verScroll = Scrollbar(tableFrame, orient="vertical", command= table.yview, width= 30)
     verScroll.pack(side = 'right', fill=BOTH, padx=2, pady=2)
@@ -178,17 +180,18 @@ def __init__():
     table.tag_configure('red', background="#C7B7A3")
 
     #Modifies "Icon Column" - Makes it 0 Width
-    table.heading("#0",sort_by='name', text=list(weapons.weapon_list[0].keys())[0]) 
+    table.heading("#0",sort_type='str', text=list(weapons.weapon_list[0].keys())[0])
     table.column("#0",width=0, minwidth= 0, stretch=False)
 
     def generateColumns(columns):
         ##Create All Available Columns
         for count, ele in enumerate(columns):
             #Default Row Parameters
-            head_kwarg = {'sort_by' : 'name','text' : ele}
+            head_kwarg = {'sort_type' : 'str','text' : ele}
             col_kwarg  = {'anchor': 'c', 'width' : 80, 'minwidth' : 60, 'stretch' : True}
             print(ele)
-            #Row Parameters
+
+            #Column Parameters
             match ele: 
                 case "Weapon Name":
                     col_kwarg['width'] = 240
@@ -224,31 +227,31 @@ def __init__():
 
                 case "_damageModifier":
                     head_kwarg['text'] = "Damage Mod"
-                    head_kwarg['sort_by'] = "name"
+                    head_kwarg['sort_type'] = "str"
                     col_kwarg['width'] = 90
                     col_kwarg['minwidth'] = 90
 
                 case "_toHitBonus":
                     head_kwarg['text'] = "To Hit"
-                    head_kwarg['sort_by'] = "int"
+                    head_kwarg['sort_type'] = "int"
                     col_kwarg['width'] = 50
                     col_kwarg['minwidth'] = 50
 
                 case "_damagePerAttack":
                     head_kwarg['text'] = "Damage Per Attack"
-                    head_kwarg['sort_by'] = "float"
+                    head_kwarg['sort_type'] = "float"
                     col_kwarg['width'] = 140
                     col_kwarg['minwidth'] = 115
 
                 case"_averageSucessfulAttacks":
                     head_kwarg['text'] = "Sucessful Attacks"
-                    head_kwarg['sort_by'] = "float"
+                    head_kwarg['sort_type'] = "float"
                     col_kwarg['width'] = 115
                     col_kwarg['minwidth'] = 115
 
                 case"_DPT":
                     head_kwarg['text'] = "Damage Per Turn"
-                    head_kwarg['sort_by'] = "float"
+                    head_kwarg['sort_type'] = "float"
                     col_kwarg['width'] = 115
                     col_kwarg['minwidth'] = 115
 
@@ -265,7 +268,7 @@ def __init__():
             if weapons.hasTags(ele,"Blunt")[0] == True:
                 _weapon['Default Damage'] = " + ".join(((_weapon['Default Damage']), str(weapons.BLUNT_MOD)))
 
-            if not ele['_damageModifier'] == 0:  
+            if ele['_damageModifier'] is not 0:  
                 _weapon['_damageDice'] = " + ".join((str(_weapon['_damageDice']), str(int(ele['_damageModifier']))))
                 
             _weapon['_damageModifier'] = "+" + str(int(_weapon['_damageModifier']))
