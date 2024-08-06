@@ -69,58 +69,105 @@ class MyTreeview(ttk.Treeview):
      #
     ### End of MyTreeView Class
 
-class userInfo(object):
-    userVariables = {
-        "Weapon Level" : 1,
-        "To Hit Bonus" : 0, 
-        "Damage Modifier" : 0,
-        "Number of Attacks" : 0
-    }
-    userEntryObjects = []
-
-    # Creates UserInfo Fields / Entries /
+class userFields(object):
+    userEntrys = []
+      
     def __init__(self, root : Tk):
-        # Creates Tkinter frame
+
+        # Default values for userEntry
+        USER_ENTRY_DEFAULT = {
+            "_name" : "Default" ,
+            "_default_value" : 0,
+            "_current_value" : 0,
+            "_entry_object" : None,
+            "_colomn_refrence" : None,
+            "_entry_register" : self.is_num}
+        
+        #Array of userEntry's to be created. Parameters must be in USER_ENTRY_DEFAULT dictionary
+        _userEntryParameters = [
+            {"_name" : "Weapon Level", "_default_value" : 1},
+            {"_name" : "To Hit Bonus"},
+            {"_name" : "Weapon Mod"},
+            {"_name" : "Number of Attacks"}
+        ]
+
+        #Dynamically creates list of userEntry
+        self.userEntrys = self.generate_all_userEntry(USER_ENTRY_DEFAULT,_userEntryParameters)
+        
+
+        # Tkinter Frame object to hold all elements
         frame = Frame(root, bg = "white", relief=FLAT)
         frame.pack(side=TOP, anchor=NW, expand=True)
+        
+        for count, ele in enumerate(self.userEntrys):
+        # Dynamically create user Entry fields, assigning values in userEntries array
 
-        
-        
-        # Creates a Lable and Entry box for Each key in userVariables
-        for count, ele in enumerate(self.userVariables.items()):
             # Create Display Lable with Stat Name
-            label = Label(frame, text=ele[0],width=15, bg="white")
+            label = Label(frame, text=ele['_name'],width=15, bg="white")
             label.grid(row=0, column=count,sticky=EW, padx=1)
 
             # Create userInfo entry object
             entry = Entry(frame, justify=CENTER,width=15, bg="white", bd=3)
             entry.grid(row=1, column=count,sticky=EW, padx=10, pady=2)
-            isDigitRegister = root.register(self.is_digits)
+
+            # Registers and assigns text validation function
+            isDigitRegister = root.register(ele['_entry_register'])
             entry.config(validate="key",validatecommand=(isDigitRegister,'%P'))
 
-            # Instantiate the Entry Box-
-            entry.insert(0,ele[1])
-            self.userEntryObjects.append(entry)
+            #Updates userEntry information about its entryBox
+            ele['_entry_object'] = entry
+            ele['_current_value'] = entry.get()
+            ele['_column_refrence'] = count
+            
+            # Instantiate the Entry Box into the application
+            entry.insert(0,ele['_default_value'])
 
-        #Create Calculate Button, and assign Callback
-        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=self.get_userInfo)
-        calcBtn.grid(row=0, column= len(self.userVariables)+1, rowspan=2, sticky=NSEW, padx=(25,0))
+
+        #Create buttonm, and assign it to trigger update_userInfo when clicked
+        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=self.update_userEntrys)
+        calcBtn.grid(row=0, column= len(self.userEntrys)+1, rowspan=2, sticky=NSEW, padx=(25,0))
+
+    def generate_all_userEntry(self, _defaultParameters, _allParameters : list[dict]):
+        """Creates new user entry field from list of parameters"""
+
+        def generate_userEntry(_defaultParameters, _parameter):
+            """Creates dictionary that has changes from userEntry
+            that are shared betweent he two dictionaries"""
+            
+            # Create Local copy, and loop through all items
+            userEntry = dict(_defaultParameters)
+            for key, value in _parameter.items():
+                if key in _defaultParameters.keys():
+                    # If this item's key is shared between the two. Update local copy
+                    userEntry[key] = value  
+
+            # Return parameter list for generating userEntry      
+            return userEntry
+
+        #Generates parameter dictionary for each object in _allParameters
+        allUserEntries = []
+        for parameter in _allParameters:
+            allUserEntries.append(generate_userEntry(_defaultParameters, _parameter = parameter))
+        return allUserEntries
     
-    #Returns userInfo from all userInfo fields
-    def get_userInfo(self):
-        _userInfo = dict(self.userVariables)
-        print('Getting userInfo')
-
-        # Loops through all userEntryObjects, and saves the text entered into the Entry Objects
-        # Returns new dictionary of all user entries
-        for count, ele in enumerate(self.userEntryObjects):
-            entry = ele.get()
-            if entry:
-                _userInfo[list(_userInfo.keys())[count]] = entry
-        return _userInfo  
+    def update_userEntrys(self):
+        """Collect all information from userEntrys
+           Update internal values"""
+        
+        returnValues = []
+           
+        for count, ele in enumerate(self.userEntrys):
+            # For ever field in userEntrys get input, and return list of all inputs    
+            currVal = ele['_entry_object'].get()
+            #Update userEntry with new input
+            ele['_current_value'] = currVal
+            returnValues.append((ele['_name'],ele['_entry_object'].get()))
      
-    #Callback function for Entries to verify if Text is a Digit
-    def is_digits(self, input):
+        # TODO : Trigger updateTable funtion (returnValues)
+        return returnValues
+     
+    def is_num(self, input):
+        """Used to validate text input in TTK.Entry"""
         return (input.isdigit() or input == "")
     
      #
@@ -142,7 +189,7 @@ def __init__():
     root = Tk()
     root.title("Afterdark™ Damage Per Turn Calculator")
     root.resizable(width=1, height=1)
-    userInfo(root)
+    userFields(root)
 
     #Create Frame for holding Table Data
     tableFrame = Frame(root, bg = "grey", relief=FLAT, height= 400)
@@ -189,7 +236,6 @@ def __init__():
             #Default Row Parameters
             head_kwarg = {'sort_type' : 'str','text' : ele}
             col_kwarg  = {'anchor': 'c', 'width' : 80, 'minwidth' : 60, 'stretch' : True}
-            print(ele)
 
             #Column Parameters
             match ele: 
@@ -268,7 +314,7 @@ def __init__():
             if weapons.hasTags(ele,"Blunt")[0] == True:
                 _weapon['Default Damage'] = " + ".join(((_weapon['Default Damage']), str(weapons.BLUNT_MOD)))
 
-            if ele['_damageModifier'] is not 0:  
+            if not ele['_damageModifier'] == 0:  
                 _weapon['_damageDice'] = " + ".join((str(_weapon['_damageDice']), str(int(ele['_damageModifier']))))
                 
             _weapon['_damageModifier'] = "+" + str(int(_weapon['_damageModifier']))
