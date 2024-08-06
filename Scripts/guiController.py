@@ -16,94 +16,97 @@ class MyTreeview(ttk.Treeview):
         Find Function in class of sort_type 
         If it exists assing callback function to heading"""
         if sort_type and not hasattr(kwargs, 'command'):
-            func = getattr(self, f"_sort_by_{sort_type}", None)
+            func = getattr(self, f"sort_by_{sort_type}", None)
             if func:
                 kwargs['command'] = partial(func, column, False)
 
         # Bind function to Right Click callback from Tkinter Treeview
-        self.bind("<Button-3>", self._on_right_click)        
+        self.bind("<Button-3>", self.on_right_click)        
         return super().heading(column, **kwargs)
 
-    def _sort(self, _column, _data_type = str, _reverse = False, _callback = None, _remove_sort : bool = False):
+    def sort(self, column, data_type = str, reverse = False, callback = None, remove_sort : bool = False):
         """ Sorts Treeview by Column and Data Type
         Creats List of all row ID's 
         Converts to list of values in a column
         Sort list by data_type"""
         
         allRows = self.get_children('')
-        sortedRows = [(self.set(row, _column), row) for row in allRows]
-        sortedRows.sort(key=lambda tup: _data_type(tup[int(_remove_sort)]), reverse=_reverse)
+        sortedRows = [(self.set(row, column), row) for row in allRows]
+        sortedRows.sort(key=lambda tup: data_type(tup[int(remove_sort)]), reverse=reverse)
 
         # Move each row to index it appears in sortedRows
         # Re-assigns callback function to header with oppsite sort order
         for index, (_, row) in enumerate(sortedRows):
             self.move(row, '', index)
 
-        if _remove_sort is False:
-            self.heading(_column, command=partial(_callback, _column, not _reverse))
+        if remove_sort is False:
+            self.heading(column, command=partial(callback, column, not reverse))
 
-    def _sort_by_int(self, column, reverse):
+    def sort_by_int(self, column, reverse):
         """When clicking header, Sorts table by Columns integers."""
-        self._sort(_column = column, _data_type = int, _reverse = reverse,  _callback = self._sort_by_int)
+        self.sort(column = column, data_type = int, reverse = reverse,  callback = self.sort_by_int)
  
-    def _sort_by_str(self, column, reverse):
+    def sort_by_str(self, column, reverse):
         """When clicking header, Sorts table by Columns strings."""
-        self._sort(_column = column, _data_type = str, _reverse = reverse,  _callback = self._sort_by_str)
+        self.sort(column = column, data_type = str, reverse = reverse,  callback = self.sort_by_str)
 
-    def _sort_by_date(self, column, reverse):
+    def sort_by_date(self, column, reverse):
         """When clicking header, Sorts table by Columns dates."""
-        def _str_to_datetime(string):
+        def _str_to_datetime(string): 
+            # Used to convert string to dateTime Object
             return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
-        self._sort(_column = column, _reverse = reverse,  _callback = self._sort_by_date)
+        self.sort(column = column, data_type= objDateTime, reverse = reverse,  callback = self.sort_by_date)
 
-    def _sort_by_float(self, column, reverse):
+    def sort_by_float(self, column, reverse):
         """When clicking header, Sorts table by Columns floats."""
-        self._sort(_column = column, _data_type = float, _reverse = reverse,  _callback = self._sort_by_float)
+        self.sort(column = column, data_type = float, reverse = reverse,  callback = self.sort_by_float)
     
-    def _on_right_click(self, event):
+    def on_right_click(self, event):
         """When rightclicking identify if clicking header, and clear sort"""
         region = self.identify_region(event.x, event.y)
         column = self.identify("column", event.x, event.y)
         if region == "heading":
-            self._sort(_column = column, _remove_sort=True)
+            self.sort(column = column, remove_sort=True)
      #
     ### End of MyTreeView Class
 
-class userFields(object):
-    userEntrys = []
+class UserFields(object):
+    """Handles creating / updating / and gathering information from User Input Fields"""
+    user_entrys = []
       
     def __init__(self, root : Tk):
-
-        # Default values for userEntry
-        USER_ENTRY_DEFAULT = {
-            "_name" : "Default" ,
-            "_default_value" : 0,
-            "_current_value" : 0,
-            "_entry_object" : None,
-            "_colomn_refrence" : None,
-            "_entry_register" : self.is_num}
+        """Generates main body of userFields, creating in root frame from Tkinter"""
         
-        #Array of userEntry's to be created. Parameters must be in USER_ENTRY_DEFAULT dictionary
-        _userEntryParameters = [
-            {"_name" : "Weapon Level", "_default_value" : 1},
-            {"_name" : "To Hit Bonus"},
-            {"_name" : "Weapon Mod"},
-            {"_name" : "Number of Attacks"}
+        # Default values for user_entry
+        USER_ENTRY_DEFAULT = {
+            "name" : "Default" ,
+            "default_value" : 0,
+            "current_value" : 0,
+            "entry_object" : None,
+            "colomn_refrence" : None,
+            "entry_register" : self.validate_int}
+        
+        #Array of user_entry's to be created. Parameters must be in USER_ENTRY_DEFAULT dictionary
+        user_entry_parameters = [
+            {"name" : "weapon_level", "default_value" : 1},
+            {"name" : "to_hit_bonus"},
+            {"name" : "weapon_mod"},
+            {"name" : "number_of_attacks"}
         ]
 
-        #Dynamically creates list of userEntry
-        self.userEntrys = self.generate_all_userEntry(USER_ENTRY_DEFAULT,_userEntryParameters)
+        #Dynamically creates list of user_entry
+        self.user_entrys = self.generate_userEntrys(USER_ENTRY_DEFAULT,user_entry_parameters)
         
 
         # Tkinter Frame object to hold all elements
         frame = Frame(root, bg = "white", relief=FLAT)
         frame.pack(side=TOP, anchor=NW, expand=True)
         
-        for count, ele in enumerate(self.userEntrys):
+        for count, ele in enumerate(self.user_entrys):
         # Dynamically create user Entry fields, assigning values in userEntries array
 
             # Create Display Lable with Stat Name
-            label = Label(frame, text=ele['_name'],width=15, bg="white")
+            label = Label(frame, text=ele['name'],width=15, bg="white")
             label.grid(row=0, column=count,sticky=EW, padx=1)
 
             # Create userInfo entry object
@@ -111,214 +114,203 @@ class userFields(object):
             entry.grid(row=1, column=count,sticky=EW, padx=10, pady=2)
 
             # Registers and assigns text validation function
-            isDigitRegister = root.register(ele['_entry_register'])
+            isDigitRegister = root.register(ele['entry_register'])
             entry.config(validate="key",validatecommand=(isDigitRegister,'%P'))
 
-            #Updates userEntry information about its entryBox
-            ele['_entry_object'] = entry
-            ele['_current_value'] = entry.get()
-            ele['_column_refrence'] = count
+            #Updates user_entry information about its entryBox
+            ele['entry_object'] = entry
+            ele['current_value'] = entry.get()
+            ele['colomn_refrence'] = count
             
             # Instantiate the Entry Box into the application
-            entry.insert(0,ele['_default_value'])
+            entry.insert(0,ele['default_value'])
 
 
         #Create buttonm, and assign it to trigger update_userInfo when clicked
-        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=self.update_userEntrys)
-        calcBtn.grid(row=0, column= len(self.userEntrys)+1, rowspan=2, sticky=NSEW, padx=(25,0))
+        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=self.get_userEntrys)
+        calcBtn.grid(row=0, column= len(self.user_entrys)+1, rowspan=2, sticky=NSEW, padx=(25,0))
 
-    def generate_all_userEntry(self, _defaultParameters, _allParameters : list[dict]):
+    def generate_userEntrys(self, default_parameters, _allParameters : list[dict]):
         """Creates new user entry field from list of parameters"""
 
-        def generate_userEntry(_defaultParameters, _parameter):
-            """Creates dictionary that has changes from userEntry
+        def generate_userEntry(default_parameters, parameter):
+            """Creates dictionary that has changes from user_entry
             that are shared betweent he two dictionaries"""
             
             # Create Local copy, and loop through all items
-            userEntry = dict(_defaultParameters)
-            for key, value in _parameter.items():
-                if key in _defaultParameters.keys():
+            user_entry = dict(default_parameters)
+            for key, value in parameter.items():
+                if key in default_parameters.keys():
                     # If this item's key is shared between the two. Update local copy
-                    userEntry[key] = value  
+                    user_entry[key] = value  
 
-            # Return parameter list for generating userEntry      
-            return userEntry
+            # Return parameter list for generating user_entry      
+            return user_entry
 
         #Generates parameter dictionary for each object in _allParameters
         allUserEntries = []
         for parameter in _allParameters:
-            allUserEntries.append(generate_userEntry(_defaultParameters, _parameter = parameter))
+            allUserEntries.append(generate_userEntry(default_parameters, parameter = parameter))
         return allUserEntries
     
-    def update_userEntrys(self):
-        """Collect all information from userEntrys
+    def get_userEntrys(self):
+        """Collect all information from user_entrys
            Update internal values"""
         
         returnValues = []
-           
-        for count, ele in enumerate(self.userEntrys):
-            # For ever field in userEntrys get input, and return list of all inputs    
-            currVal = ele['_entry_object'].get()
-            #Update userEntry with new input
-            ele['_current_value'] = currVal
-            returnValues.append((ele['_name'],ele['_entry_object'].get()))
+        for count, ele in enumerate(self.user_entrys):
+            # For ever field in user_entrys get input, and return list of all inputs    
+            currVal = ele['entry_object'].get()
+            #Update user_entry with new input
+            ele['current_value'] = currVal
+            returnValues.append((ele['name'],ele['entry_object'].get()))
      
         # TODO : Trigger updateTable funtion (returnValues)
         return returnValues
-     
-    def is_num(self, input):
+
+    def validate_int(self, input):
         """Used to validate text input in TTK.Entry"""
         return (input.isdigit() or input == "")
     
      #
     ### End of userInfo Class
 
-#Update Weapons Based on User Data    
-def update_weapon_list(userInfo):
+class Table():
+    __treeview = None
+    __style = None
+    __frame = None
+
+    def __init__(self, root: Tk, cols, bg = "grey", height = "400", relief = FLAT, anchor = NW, side = TOP, expand = True):
+        #Create Frame for holding Table Data
+        tableFrame = Frame(root, bg = bg, relief = relief, height = height)
+        tableFrame.pack(side = side, anchor = anchor,expand = expand)
     
-    for i in range(len(weapons.weapon_list)):
-        curWeap = weapons.weapon_list[i]
-        weapons.level_weapon(curWeap,int(userInfo['Weapon Level']))
-        dmgPerAtk = weapons.get_per_atk(curWeap,userInfo)
-        weapons.weapon_list[i]['_damagePerAttack'] = dmgPerAtk
-        print("{0} | Damage Per Attack - {1}".format(curWeap['Weapon Name'],dmgPerAtk))
+        #Create Table Object
+        self.__treeview = MyTreeview(tableFrame, columns=cols, height= 32, selectmode=BROWSE, style=self.__style)
+        verScroll = Scrollbar(tableFrame, orient="vertical", command= self.__treeview.yview, width= 30)
+        verScroll.pack(side = 'right', fill=BOTH, padx=2, pady=2)
+        self.__treeview.pack(side=TOP, anchor=NW, expand=True ,fill=BOTH)
+        self.__treeview.tag_configure('green', background="#B5CFB7") 
+        self.__treeview.tag_configure('yellow', background="#FAEDCE")
+        self.__treeview.tag_configure('orange', background="#F8C794") 
+        self.__treeview.tag_configure('red', background="#C7B7A3")
+        self.__frame = tableFrame
 
-def __init__():
-    weapons.initilizeWeaponList()
-    #Initilize Application, and frame contrainer
-    root = Tk()
-    root.title("Afterdark™ Damage Per Turn Calculator")
-    root.resizable(width=1, height=1)
-    userFields(root)
+    def initiate_style(self):
+        self.__style = ttk.Style()
+        self.__style.theme_use('clam')
+        self.__style.configure('Treeview' , rowheight=22)
+        self.__style.layout('my.Treeview',
+                [('Treeview.field', {'sticky': 'nswe', 'border': '1', 'children': [
+                    ('Treeview.padding', {'sticky': 'nswe', 'children': [
+                        ('Treeview.treearea', {'sticky': 'nswe'})
+                        ]})
+                    ]})
+                ])    
+        self.__style.configure('my.Treeview.Heading', background='gray', font=('Calibri Bold', 10), relief='none')
+        return self.__style
 
-    #Create Frame for holding Table Data
-    tableFrame = Frame(root, bg = "grey", relief=FLAT, height= 400)
-    tableFrame.pack(side=TOP, anchor=NW,expand=True)
-
-
-    #Create list of all Columns without Weapon Name
-    cols = list(weapons.weapon_list[0].keys())
-
-
-    myStyle = ttk.Style()
-    myStyle.theme_use('clam')
-    myStyle.configure('Treeview' , rowheight=22)
-    myStyle.layout('my.Treeview',
-             [('Treeview.field', {'sticky': 'nswe', 'border': '1', 'children': [
-                 ('Treeview.padding', {'sticky': 'nswe', 'children': [
-                     ('Treeview.treearea', {'sticky': 'nswe'})
-                     ]})
-                 ]})
-              ])
-              
-    myStyle.configure('my.Treeview.Heading', background='gray', font=('Calibri Bold', 10), relief='none')
-
+    def get_style(self):
+        return self.__style
     
+    def get_treeview(self):
+        return self.__treeview()
     
-    #Create Table Object
-    table = MyTreeview(tableFrame, columns=cols, height= 32, selectmode=BROWSE, style='my.Treeview')
+    def initiate_columns(self, cols):
+        #Modifies "Icon Column" - Makes it 0 Width
+        self.__treeview.heading("#0",sort_type='str', text=list(weapons.weapon_list[0].keys())[0])
+        self.__treeview.column("#0",width=0, minwidth= 0, stretch=False)
 
-    verScroll = Scrollbar(tableFrame, orient="vertical", command= table.yview, width= 30)
-    verScroll.pack(side = 'right', fill=BOTH, padx=2, pady=2)
-    table.pack(side=TOP, anchor=NW, expand=True ,fill=BOTH)
-    table.tag_configure('green', background="#B5CFB7") 
-    table.tag_configure('yellow', background="#FAEDCE")
-    table.tag_configure('orange', background="#F8C794") 
-    table.tag_configure('red', background="#C7B7A3")
-
-    #Modifies "Icon Column" - Makes it 0 Width
-    table.heading("#0",sort_type='str', text=list(weapons.weapon_list[0].keys())[0])
-    table.column("#0",width=0, minwidth= 0, stretch=False)
-
-    def generateColumns(columns):
-        ##Create All Available Columns
-        for count, ele in enumerate(columns):
+        for count, ele in enumerate(cols):
             #Default Row Parameters
             head_kwarg = {'sort_type' : 'str','text' : ele}
             col_kwarg  = {'anchor': 'c', 'width' : 80, 'minwidth' : 60, 'stretch' : True}
-
+            
             #Column Parameters
             match ele: 
-                case "Weapon Name":
+                case "weapon_name":
+                    head_kwarg['text'] = "Weapon Name"
                     col_kwarg['width'] = 240
                     col_kwarg['minwidth'] = 240
-                case "Default Damage":
+                case "default_damage":
                     head_kwarg['text'] = "Base Roll"
+                    col_kwarg['width'] = 60
+                    col_kwarg['minwidth'] = 50
                 case "CP": 
                     col_kwarg['width'] = 40
                     col_kwarg['minwidth'] = 30
 
-                case "Weapon Tags":
+                case "weapon_tags":
+                    head_kwarg['text'] = "Weapon Tags"
                     col_kwarg['width'] = 300
                     col_kwarg['minwidth'] = 300
 
-                case "Magazine Size":
+                case "magazine_size":
+                    head_kwarg['text'] = "Magazine Size"
                     col_kwarg['width'] = 90
                     col_kwarg['minwidth'] = 90
 
-                case "Weapon Catagory":
+                case "weapon_category":
+                    head_kwarg['text'] = "Weapon Category"
                     col_kwarg['width'] = 120
                     col_kwarg['minwidth'] = 120
 
-                case "_level":
-                    head_kwarg['text'] = "Level"
+                case "weapon_level":
+                    head_kwarg['text'] = "Weapon Level"
 
-                case "_damageDice":
+                case "damage_dice":
                     head_kwarg['text'] = "Damage Dice"
                     col_kwarg['minwidth'] = 80
 
-                case "_tagExtraDice":
+                case "tag_damage_dice":
                     head_kwarg['text'] = "Tag Damage"
                     col_kwarg['minwidth'] = 80
 
-                case "_damageModifier":
-                    head_kwarg['text'] = "Damage Mod"
-                    head_kwarg['sort_type'] = "str"
+                case "damage_mod":
+                    head_kwarg['text'] = "Damage Modifier"
                     col_kwarg['width'] = 90
                     col_kwarg['minwidth'] = 90
 
-                case "_toHitBonus":
-                    head_kwarg['text'] = "To Hit"
+                case "to_hit_bonus":
+                    head_kwarg['text'] = "To Hit Bonus"
                     head_kwarg['sort_type'] = "int"
                     col_kwarg['width'] = 50
                     col_kwarg['minwidth'] = 50
 
-                case "_damagePerAttack":
+                case "damage_per_attack":
                     head_kwarg['text'] = "Damage Per Attack"
                     head_kwarg['sort_type'] = "float"
                     col_kwarg['width'] = 140
                     col_kwarg['minwidth'] = 115
 
-                case"_averageSucessfulAttacks":
+                case"sucessful_attacks":
                     head_kwarg['text'] = "Sucessful Attacks"
                     head_kwarg['sort_type'] = "float"
                     col_kwarg['width'] = 115
                     col_kwarg['minwidth'] = 115
 
-                case"_DPT":
+                case"damage_per_turn":
                     head_kwarg['text'] = "Damage Per Turn"
                     head_kwarg['sort_type'] = "float"
                     col_kwarg['width'] = 115
                     col_kwarg['minwidth'] = 115
 
-            table.heading(column=ele, **head_kwarg)
-            table.column(column=ele, **col_kwarg)
-    
-    generateColumns(cols)
+            self.__treeview.heading(column=ele, **head_kwarg)
+            self.__treeview.column(column=ele, **col_kwarg)
 
-    def drawTable():
+    def draw_table(self):
         #Populates Table 
-        for count, ele in enumerate(weapons.weapon_list):
+        for count, ele in enumerate(weapons.weapon_list): # SIN
             _weapon = dict(ele)
-            _weapon['_damageDice'] = 'd'.join(_weapon['_damageDice'])
+            _weapon['damage_dice'] = 'd'.join(_weapon['damage_dice'])
             if weapons.hasTags(ele,"Blunt")[0] == True:
-                _weapon['Default Damage'] = " + ".join(((_weapon['Default Damage']), str(weapons.BLUNT_MOD)))
+                _weapon['default_damage'] = " + ".join(((_weapon['default_damage']), str(weapons.BLUNT_MOD)))
 
-            if not ele['_damageModifier'] == 0:  
-                _weapon['_damageDice'] = " + ".join((str(_weapon['_damageDice']), str(int(ele['_damageModifier']))))
+            if not ele['damage_mod'] == 0:  
+                _weapon['damage_dice'] = " + ".join((str(_weapon['damage_dice']), str(int(ele['damage_mod']))))
                 
-            _weapon['_damageModifier'] = "+" + str(int(_weapon['_damageModifier']))
-            _weapon['_toHitBonus'] = "+" + str(int(_weapon['_toHitBonus']))
+            _weapon['damage_mod'] = "+" + str(int(_weapon['damage_mod']))
+            _weapon['to_hit_bonus'] = "+" + str(int(_weapon['to_hit_bonus']))
 
             
             _weapon = list(_weapon.values())
@@ -332,11 +324,34 @@ def __init__():
                     rowArgs['tags'] = 'yellow'
                 case 3:
                     rowArgs['tags'] = 'orange'
-            table.insert('', END, text=ele['Weapon Name'], **rowArgs)
-    drawTable()
-    def clearTable():
-        table.delete(table.get_children())
+            self.__.insert('', END, text=ele['weapon_name'], **rowArgs)
 
+    def clear_table(self):
+        self.__treeview.delete(self.__treeview.get_children())
+
+#Update Weapons Based on User Data    
+def update_weapon_list(self, userInfo): 
+    for i in range(len(weapons.weapon_list)):
+
+        curWeap = weapons.weapon_list[i]
+        weapons.level_weapon(curWeap,int(userInfo['weapon_level']))
+        dmgPerAtk = weapons.get_per_atk(curWeap,userInfo)
+        weapons.weapon_list[i]['damage_per_attack'] = dmgPerAtk
+        print("{0} | damage_per_attack - {1}".format(curWeap['weapon_name'],dmgPerAtk))
+
+def __init__(self):
+    weapons.initilizeWeaponList()
+    cols = list(weapons.weapon_list[0].keys())           # - > Should be function from weapons class IS SIN CODE
+
+    #Initilize Application
+    root = Tk()
+    root.title("Afterdark™ Damage Per Turn Calculator")
+    root.resizable(width=1, height=1)
+    
+    UserFields(root = root)                              # - > Add more Init parameters
+    Table(root=root, cols=cols)
+
+    #Create list of all Columns without weapon_name
     root.mainloop()
 
 if __name__ == "__main__":  

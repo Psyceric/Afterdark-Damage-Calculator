@@ -30,12 +30,12 @@ def initilizeWeaponList():
             parse_weapon(row)
 
 def hasTags(weapon, *keywords : str): 
-    allTags = weapon['Weapon Tags'].split(', ')
+    allTags = weapon['weapon_tags'].split(', ')
     returnTags = []
     returnValue = True
     for keyword in keywords: #blunt, two-handed
         if "Blunt" not in allTags:
-            #print("Unable to find tag {0} in weapon {1}".format(keyword, weapon['Weapon Name']))
+            #print("Unable to find tag {0} in weapon {1}".format(keyword, weapon['weapon_name']))
             returnValue = False
             returnTags.append(keyword)
     return (returnValue, returnTags)
@@ -45,7 +45,7 @@ def parse_weapon(Weapon):
     damageModifier = 0.0
     toHitBonus = 0.0
     
-    keywords = Weapon['Weapon Tags'].split(',')
+    keywords = Weapon['weapon_tags'].split(',')
     for keyword in keywords:
         _keyword = keyword.strip()
         match _keyword:
@@ -60,18 +60,18 @@ def parse_weapon(Weapon):
             case "Wieldy":
                 toHitBonus += 1
 
-    defaultDice = Weapon['Default Damage']
+    defaultDice = Weapon['default_damage']
 
     validate_dice(defaultDice)
     WeaponStats = {}
-    Weapon['_level'] = 1
-    Weapon['_damageDice'] = get_damage_dice(defaultDice)
-    Weapon['_tagExtraDice'] = tagDamage
-    Weapon['_damageModifier'] = damageModifier
-    Weapon['_toHitBonus'] = toHitBonus
-    Weapon['_damagePerAttack'] = get_base_damage(defaultDice,tagDamage, damageModifier)
-    Weapon['_averageSucessfulAttacks'] = get_per_turn(Weapon)
-    Weapon['_DPT'] = '%.2f' % (float(Weapon['_damagePerAttack']) * float(Weapon['_averageSucessfulAttacks']))
+    Weapon['weapon_level'] = 1
+    Weapon['damage_dice'] = get_damage_dice(defaultDice)
+    Weapon['tag_damage_dice'] = tagDamage
+    Weapon['damage_mod'] = damageModifier
+    Weapon['to_hit_bonus'] = toHitBonus
+    Weapon['damage_per_attack'] = get_base_damage(defaultDice,tagDamage, damageModifier)
+    Weapon['sucessful_attacks'] = get_per_turn(Weapon)
+    Weapon['damage_per_turn'] = '%.2f' % (float(Weapon['damage_per_attack']) * float(Weapon['sucessful_attacks']))
 
 def get_base_damage(Dice : str | tuple, diceMod : int, wepMod : int = 0):
     if type(Dice) is str : 
@@ -84,7 +84,7 @@ def get_base_damage(Dice : str | tuple, diceMod : int, wepMod : int = 0):
 def get_damage_dice(Dice : str): 
     return Dice.split('d')    
 
-#Validate Damage Dice is Correct
+#Validate damage_dice is Correct
 def validate_dice(Dice: str | tuple):
     
     if type(Dice) is tuple: diceStr = (''.join(map(str, Dice)))
@@ -98,37 +98,37 @@ def validate_dice(Dice: str | tuple):
     #If continues, Return True
     return True
 
-def level_weapon(Weapon : dict, level : int) -> tuple:
-    defaultDamage = get_damage_dice(Weapon['Default Damage'])
+def level_weapon(Weapon : dict, weapon_level : int) -> tuple:
+    defaultDamage = get_damage_dice(Weapon['default_damage'])
     
 
     #How many times the Dice Face can have Leveled Up
-    diceFaceMod = min(math.floor(level/2),2)
+    diceFaceMod = min(math.floor(weapon_level/2),2)
     
     #How many more Dice rolled
-    diceQuantity = int(defaultDamage[0]) + level - diceFaceMod
+    diceQuantity = int(defaultDamage[0]) + weapon_level - diceFaceMod
 
     #Calculate Dice Face, Maximum of D12
     diceFace = min(int(defaultDamage[1]) + diceFaceMod*2,12)
     
     newDice = (diceQuantity,diceFace)
-    Weapon['_level'] = level
-    Weapon['_damageDice'] = newDice 
+    Weapon['weapon_level'] = weapon_level
+    Weapon['damage_dice'] = newDice 
     return newDice
 
 def get_per_atk(weapon : dict, userInfo):
     if weapon is None: raise Exception("Invalid Weapon Dict - Check if Initialized")
     
-    baseDamage = get_base_damage(weapon['_damageDice'], weapon['_tagExtraDice'])
+    baseDamage = get_base_damage(weapon['damage_dice'], weapon['tag_damage_dice'])
     
-    weapon['_damageModifer'] = (float(weapon['_damageModifier']) + float(userInfo['Damage Modifier']))
+    weapon['_damageModifer'] = (float(weapon['damage_mod']) + float(userInfo['damage_modifier']))
     
-    damagePerAttack = float(baseDamage) + weapon['_damageModifier']
+    damagePerAttack = float(baseDamage) + weapon['damage_mod']
     return '%f' % damagePerAttack    
 
 def get_per_turn(weapon: dict,sucessRoll = SUCCESS, curCP = 0, val = 0):
-    if(GAME_DICE + weapon['_toHitBonus']) >= sucessRoll + curCP:
-        temp = (GAME_DICE + weapon['_toHitBonus']-(sucessRoll + curCP))/10
+    if(GAME_DICE + weapon['to_hit_bonus']) >= sucessRoll + curCP:
+        temp = (GAME_DICE + weapon['to_hit_bonus']-(sucessRoll + curCP))/10
         val += temp
         return get_per_turn(weapon, sucessRoll, curCP + int(weapon['CP']), val)
     else:
