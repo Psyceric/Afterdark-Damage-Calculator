@@ -1,78 +1,145 @@
 import csv, os, re, math
+import pandas as pd
 
-weapon_list = []
-BLUNT_MOD = 4
-GAME_DICE = 10
-SUCCESS = 7
-CRITICAL_SUCCESS = 14
+class WeaponList():
 
-def initilizeWeaponList():
-    #Get all weapons from CSV File
-    fileName = './resources/Afterdark 1.02 Weapon Values.csv'
-    path = os.getcwd()
-    parentDirectory = os.path.abspath(os.path.join(path,os.pardir))
-    resourcePath = os.path.abspath(os.path.join(parentDirectory,fileName))
+    __weapon_dicts = []
+    BLUNT_MOD = 4
+    GAME_DICE = 10
+    SUCCESS = 7
+    CRITICAL_SUCCESS = 14
+    FILE_NAME = './resources/Afterdark 1.02 Weapon Values.csv'
+                
+    class Weapon():
+        _WEAPON_DICTIONARY_KEYS = ['weapon_name','default_dice','cp',
+                                  'weapon_tags','weapon_category','magazine_size']
+        
+        _WEAPON_CALC_DICTIONARY_KEYS = ['weapon_level','tag_damage_dice','damage_mod',
+                                       'to_hit_bonus','sucessful_attacks','damage_per_attack',
+                                       'sucessful_attacks','damage_per_turn']
+        
+        def __init__(self, weapon_dict : dict):
+            weapon_dict = self.combine_dict_from_keys(self._WEAPON_DICTIONARY_KEYS, self._WEAPON_CALC_DICTIONARY_KEYS)
+
+            pass
+
+        def __init__(self, weapon_name : str, default_dice : str,
+                     cp : int, tags : list[str],
+                     category : str,mag_size : int = None):
+            """Used to create new weapon's that are not a dictionary"""
+
+            weapon_dict = self.combine_dict_from_keys(self._WEAPON_DICTIONARY_KEYS, self._WEAPON_CALC_DICTIONARY_KEYS)
+            value_dict = {'weapon_name' : weapon_name, 'default_dice' : default_dice, 'cp' : cp,
+                          'weapon_tags' : tags, 'weapon_category' : category, 'magazine_size' : mag_size}
+            
+            pass
+        
+        def combine_dict_from_keys(self, default_keys : list[str], aux_keys : list[str]):
+            default_dict = dict.fromkeys(default_keys)
+            aux_dict = dict.fromkeys(aux_keys)
+            combined_dict = dict(default_dict).update(aux_keys)
+            return combined_dict
+
+        def validate_default_weapon_dict(self, weapon_dict):
+            pass
+
+        WEAPON_NAME = ""
+        DEFAULT_DAMAGE = ""
+        cp = ""
+        TAGS = []
+        CATAGORY = ""
+        MAG_SIZE = 0
+
+
+        weapon_level = 1
+        tag_damage_dice = 0
+        to_hit_bonus = 0
+        succesful_attacks = 0
+        damage_per_attack = 0
+        damage_per_turn = 0
+
     
-    #Validate that resourcePath exists
-    print("Attempting to Validate Weapon CSV File at :\n" , resourcePath.strip(),"\n")
-
-    #Error out if File Path is not Valid 
-    if os.path.isfile(resourcePath) is None:
-        raise Exception("Weapon CSV Unable to be located. : " + fileName)
-             
-    print("Sucessfully Located Weapon CSV File! Continuing...")
     
-    #Open CSV, Loading each row into Weapon_List List
-    with open(resourcePath, 'r') as csvfile:
-        csvreader = csv.DictReader(csvfile)
-        for row in csvreader:
-            weapon_list.append(row)
-            parse_weapon(row)
+    def __init__(self, file : str | pd.DataFrame):
+        """From a CSV File or a file path, populate the weapons_list"""
 
-def hasTags(weapon, *keywords : str): 
-    allTags = weapon['weapon_tags'].split(', ')
-    returnTags = []
-    returnValue = True
-    for keyword in keywords: #blunt, two-handed
-        if "Blunt" not in allTags:
-            #print("Unable to find tag {0} in weapon {1}".format(keyword, weapon['weapon_name']))
-            returnValue = False
-            returnTags.append(keyword)
-    return (returnValue, returnTags)
+        def path_to_CSV(self, file_path : str):
+            """locate a local path from root directory, and return the CSV file assocaited"""
+            local_path = os.getcwd()
+            parent_directory = os.path.abspath(os.path.join(local_path,os.pardir))
+            absolute_directory = os.path.abspath(os.path.join(parent_directory,file_path))
+            with (pd.read_csv(absolute_directory)) as csv_file:
+                return csv_file
+        
 
-def parse_weapon(Weapon):
-    tagDamage = 0.0
-    damageModifier = 0.0
-    toHitBonus = 0.0
+        csv_file = None
+        if type(file) is str:
+            csv_file = path_to_CSV(file)
+        elif type(file) is pd.DataFrame:
+            csv_file = file
+
+        __weapon_dicts = csv_file.to_dict(orient="rectors")
+
+    def has_tags(self, weapon_dict : dict, *tags : str):
+        """Determins if the weapon contains all tags specified"""
+        weapon_tags = set(self.get_tags(weapon_dict))
+        requested_tags = set(list(tags))
+        
+        # Returns if all requested_tags is a sub-list of all weapon_tags
+        return requested_tags.intersection(weapon_tags) == requested_tags
     
-    keywords = Weapon['weapon_tags'].split(',')
-    for keyword in keywords:
-        _keyword = keyword.strip()
-        match _keyword:
-            case "Automatic":
-                tagDamage += .5
-            case "Flexible"|"Cleaving"|"Piercing"|"Incindiary":
-                tagDamage += 1
-            case "Explosive":
-                tagDamage += 2
-            case "Blunt":
-                damageModifier += BLUNT_MOD
-            case "Wieldy":
-                toHitBonus += 1
+    def get_tags(self, weapon_dict: dict):
+        """Get list of All Weapon tags"""
+        return weapon_dict['weapon_tags'].split(', ')
+        
+    def get_shared_tags(self, weapon_dict : dict, *tags : str):
+        weapon_tags = self.get_tags(weapon_dict=weapon_dict)
+        shared_tags = []
 
-    defaultDice = Weapon['default_damage']
+        for tag in tags:
+            if tag in weapon_tags:
+                shared_tags.append(tag)
+        return shared_tags
+    
+    def parse_weapon(self, weapon_dict : dict, user_entrys : dict):
+        weapon_level = user_entrys['weapon_level']
+        tag_damage_dice = 0.0
+        damage_modifier = user_entrys['damage_modifier']
+        to_hit_bonus = user_entrys['to_hit_bonus']
+        
 
-    validate_dice(defaultDice)
-    WeaponStats = {}
-    Weapon['weapon_level'] = 1
-    Weapon['damage_dice'] = get_damage_dice(defaultDice)
-    Weapon['tag_damage_dice'] = tagDamage
-    Weapon['damage_mod'] = damageModifier
-    Weapon['to_hit_bonus'] = toHitBonus
-    Weapon['damage_per_attack'] = get_base_damage(defaultDice,tagDamage, damageModifier)
-    Weapon['sucessful_attacks'] = get_per_turn(Weapon)
-    Weapon['damage_per_turn'] = '%.2f' % (float(Weapon['damage_per_attack']) * float(Weapon['sucessful_attacks']))
+        weapon_tags = self.get_tags(weapon_dict)
+        
+        for tag in weapon_tags:
+            match tag:
+                case "Automatic":
+                    tag_damage_dice += .5
+                case "Flexible"|"Cleaving"|"Piercing"|"Incindiary":
+                    tag_damage_dice += 1
+                case "Explosive":
+                    tag_damage_dice += 2
+                case "Blunt":
+                    damage_modifier += self.BLUNT_MOD
+                case "Wieldy":
+                    to_hit_bonus += 1
 
+                # All Dictionary Entries Methods should only require (Weapon, and userEntry)
+
+        weapon_calc_dict = {'weapon_level' : weapon_level,
+                            'tag_damage_dice' : tag_damage_dice, 'damage_mod' : damage_modifier,
+                            'to_hit_bonus' : to_hit_bonus, 'sucessful_attacks' : get_per_turn(weapon_dict),
+                            'damage_per_attack' : get_base_damage(weapon_dict['default_dice'], tag_damage_dice, damage_modifier),
+                            'sucessful_attacks' : get_per_turn(weapon_dict), 'damage_per_turn' : get_damage_per_turn()}
+        
+        weapon_dict['weapon_level'] = user_entrys['weapon_level']
+        weapon_dict['tag_damage_dice'] = tag_damage_dice
+        weapon_dict['damage_mod'] = damage_modifier
+        weapon_dict['to_hit_bonus'] = to_hit_bonus
+        weapon_dict['sucessful_attacks'] = get_per_turn(weapon_dict)
+        weapon_dict['damage_per_attack'] = get_base_damage(weapon_dict['default_dice'],tag_damage_dice, damage_modifier)
+        weapon_dict['sucessful_attacks'] = get_per_turn(weapon_dict)
+        weapon_dict['damage_per_turn'] = '%.2f' % (float(weapon_dict['damage_per_attack']) * float(weapon_dict['sucessful_attacks']))
+        
 def get_base_damage(Dice : str | tuple, diceMod : int, wepMod : int = 0):
     if type(Dice) is str : 
         damageTPL = get_damage_dice(Dice)
@@ -99,7 +166,7 @@ def validate_dice(Dice: str | tuple):
     return True
 
 def level_weapon(Weapon : dict, weapon_level : int) -> tuple:
-    defaultDamage = get_damage_dice(Weapon['default_damage'])
+    defaultDamage = get_damage_dice(Weapon['default_dice'])
     
 
     #How many times the Dice Face can have Leveled Up
@@ -130,6 +197,6 @@ def get_per_turn(weapon: dict,sucessRoll = SUCCESS, curCP = 0, val = 0):
     if(GAME_DICE + weapon['to_hit_bonus']) >= sucessRoll + curCP:
         temp = (GAME_DICE + weapon['to_hit_bonus']-(sucessRoll + curCP))/10
         val += temp
-        return get_per_turn(weapon, sucessRoll, curCP + int(weapon['CP']), val)
+        return get_per_turn(weapon, sucessRoll, curCP + int(weapon['cp']), val)
     else:
         return '%.1f' % val

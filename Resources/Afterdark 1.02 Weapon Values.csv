@@ -1,4 +1,4 @@
-weapon_name,default_damage,CP,weapon_tags,weapon_category,magazine_size
+weapon_name,default_dice,cp,weapon_tags,weapon_category,magazine_size
 Dusters,3d4,1,"One-Handed, Blunt, Brawling",Brawling,N/A
 Punch Knife,3d4,1,"One-Handed, Piercing, Brawling",Brawling,N/A
 Small Improvised Weapon,3d4,2,"One-Handed, Thrown (25/50)",Brawling,N/A

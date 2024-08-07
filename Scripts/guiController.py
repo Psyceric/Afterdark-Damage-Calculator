@@ -90,7 +90,7 @@ class UserFields(object):
         user_entry_parameters = [
             {"name" : "weapon_level", "default_value" : 1},
             {"name" : "to_hit_bonus"},
-            {"name" : "weapon_mod"},
+            {"name" : "damage_modifier"},
             {"name" : "number_of_attacks"}
         ]
 
@@ -232,11 +232,11 @@ class Table():
                     head_kwarg['text'] = "Weapon Name"
                     col_kwarg['width'] = 240
                     col_kwarg['minwidth'] = 240
-                case "default_damage":
+                case "default_dice":
                     head_kwarg['text'] = "Base Roll"
                     col_kwarg['width'] = 60
                     col_kwarg['minwidth'] = 50
-                case "CP": 
+                case "cp": 
                     col_kwarg['width'] = 40
                     col_kwarg['minwidth'] = 30
 
@@ -266,7 +266,7 @@ class Table():
                     head_kwarg['text'] = "Tag Damage"
                     col_kwarg['minwidth'] = 80
 
-                case "damage_mod":
+                case "damage_modifier":
                     head_kwarg['text'] = "Damage Modifier"
                     col_kwarg['width'] = 90
                     col_kwarg['minwidth'] = 90
@@ -299,25 +299,24 @@ class Table():
             self.__treeview.column(column=ele, **col_kwarg)
 
     def draw_table(self):
-        #Populates Table 
+        #Populates Table
         for count, ele in enumerate(weapons.weapon_list): # SIN
             _weapon = dict(ele)
             _weapon['damage_dice'] = 'd'.join(_weapon['damage_dice'])
             if weapons.hasTags(ele,"Blunt")[0] == True:
-                _weapon['default_damage'] = " + ".join(((_weapon['default_damage']), str(weapons.BLUNT_MOD)))
+                _weapon['default_dice'] = " + ".join(((_weapon['default_dice']), str(weapons.BLUNT_MOD)))
 
-            if not ele['damage_mod'] == 0:  
-                _weapon['damage_dice'] = " + ".join((str(_weapon['damage_dice']), str(int(ele['damage_mod']))))
+            if not ele['damage_modifier'] == 0:  
+                _weapon['damage_dice'] = " + ".join((str(_weapon['damage_dice']), str(int(ele['damage_modifier']))))
                 
-            _weapon['damage_mod'] = "+" + str(int(_weapon['damage_mod']))
+            _weapon['damage_modifier'] = "+" + str(int(_weapon['damage_modifier']))
             _weapon['to_hit_bonus'] = "+" + str(int(_weapon['to_hit_bonus']))
 
-            
             _weapon = list(_weapon.values())
 
 
             rowArgs = {'values' : _weapon,'tags' : 'red'}
-            match int(ele['CP']):
+            match int(ele['cp']):
                 case 1:
                     rowArgs['tags'] = 'green'
                 case 2:
@@ -351,7 +350,6 @@ def __init__(self):
     UserFields(root = root)                              # - > Add more Init parameters
     Table(root=root, cols=cols)
 
-    #Create list of all Columns without weapon_name
     root.mainloop()
 
 if __name__ == "__main__":  
