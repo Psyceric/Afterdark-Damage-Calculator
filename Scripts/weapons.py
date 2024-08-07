@@ -19,9 +19,7 @@ class Weapon():
             'damage_per_attack' : 10.0,
             'sucessful_attacks' : 1.0,
             'damage_per_turn' : 10.0}
-        
-        _dict = None
-        
+                
         def __init__(self, weapon_dict : dict):
             self.populate_weapon(weapon_dict)
 
@@ -42,12 +40,9 @@ class Weapon():
             default_dict = self.combine_dict(self._WEAPON_DICTIONARY_KEYS, self._WEAPON_CALC_DICTIONARY_KEYS)
             edited_dict = dict(default_dict).update(weapon_dict)
             if not self.validate_weapon_dict(edited_dict): raise Exception("Unable to Populate weapon from : {0}\n| Does your weapon_dict match the default dict data types?\n{1}".format(edited_dict,default_dict))
-            
-            self._dict = edited_dict
+            self.weapon_dict = edited_dict
             # self.updateWeapon() - Empty Parameters = Default Settings. Passed a List of Strings = userEntry data
             # Parse and Update the weapons dictionary from the data
-
-
 
         def combine_dict(self, default : dict, aux : dict):
             return dict(default).update(aux)
@@ -87,7 +82,7 @@ class Weapon():
                             if not validate_mag(value): return False
             return True
         
-        def has_tags(self, *tags):
+        def has_tags(self, *tags): #TODO
             """Determins if the weapon contains all tags specified"""
             weapon_tags = set(self.get_tags(weapon_dict))
             requested_tags = set(list(tags))
@@ -96,12 +91,127 @@ class Weapon():
             return requested_tags.intersection(weapon_tags) == requested_tags
         
         @property
-        def weapon_tags(self, weapon_dict: dict):
-            return weapon_dict['weapon_tags'].split(', ')
+        def weapon_dict(self):
+            return self.weapon_dict
+        
+        @property
+        def name(self):
+            return self.name
+
+        @property
+        def default_damage(self):
+            return self.default_damage
+        
+        @property
+        def cp(self):
+            return self.cp
+        
+        @property
+        def tags(self):
+            return self.tags
+        
+        @property
+        def category(self):
+            return self.category
+        
+        @property
+        def magazine_size(self):
+            return self.magazine_size
+        
+        @property
+        def successful_attacks(self):
+            return self.successful_attacks
+
+        def update_weapon(self, weapon_level : int = 1, damage_modifier : int = 0, to_hit_bonus : int = 0, number_of_attacks : int = 0):
+            custom_user_entry = {
+            'weapon_level' : weapon_level,
+            'damage_modifer' : damage_modifier,
+            'to_hit_bonus' : to_hit_bonus,
+            'number_of_attacks' : number_of_attacks}
+            self.update_weapon(custom_user_entry)
+
+        def update_weapon(self, user_entrys : dict):
+            weapon_level = user_entrys['weapon_level']
+            tag_damage_dice = 0.0
+            damage_modifier = user_entrys['damage_modifier']
+            to_hit_bonus = user_entrys['to_hit_bonus']
+            number_of_attacks = user_entrys['number_of_attacks']
+
+            for tag in self.tags:
+                match tag:
+                    case "Automatic":
+                        tag_damage_dice += .5
+                    case "Flexible"|"Cleaving"|"Piercing"|"Incindiary":
+                        tag_damage_dice += 1
+                    case "Explosive":
+                        tag_damage_dice += 2
+                    case "Blunt":
+                        damage_modifier += self.BLUNT_MOD
+                    case "Wieldy":
+                        to_hit_bonus += 1
+
+            ## TODO: Figure out how to make sure these calculations are done in the correct order
+            # I want to try and no have all the variables assigned one after another, but I think it needs to happen "shrug"
+
+            weapon_calc_dict = {'weapon_level' : weapon_level,
+                                    'tag_damage_dice' : tag_damage_dice, 'damage_modifier' : damage_modifier,
+                                    'to_hit_bonus' : to_hit_bonus, 'sucessful_attacks' : get_per_turn(weapon_dict),
+                                    'damage_per_attack' : get_base_damage(weapon_dict['default_dice'], tag_damage_dice, damage_modifier),
+                                    'sucessful_attacks' : get_per_turn(weapon_dict), 'damage_per_turn' : get_damage_per_turn()}
+        
+        
+        def get_per_turn(self,weapon: dict,sucessRoll = SUCCESS, curCP = 0, val = 0):
+            if(10 + weapon['to_hit_bonus']) >= sucessRoll + curCP:
+                temp = (10 + weapon['to_hit_bonus']-(sucessRoll + curCP))/10
+                val += temp
+                return self.get_per_turn(weapon, sucessRoll, curCP + int(weapon['cp']), val)
+            else:
+                return '%.1f' % val
+            # weapon_dict['weapon_level'] = user_entrys['weapon_level']
+            # weapon_dict['tag_damage_dice'] = tag_damage_dice
+            # weapon_dict['damage_modifier'] = damage_modifier
+            # weapon_dict['to_hit_bonus'] = to_hit_bonus
+            # weapon_dict['sucessful_attacks'] = get_per_turn(weapon_dict)
+            # weapon_dict['damage_per_attack'] = get_base_damage(weapon_dict['default_dice'],tag_damage_dice, damage_modifier)
+            # weapon_dict['sucessful_attacks'] = get_per_turn(weapon_dict)
+            # weapon_dict['damage_per_turn'] = '%.2f' % (float(weapon_dict['damage_per_attack']) * float(weapon_dict['sucessful_attacks']))
+            
+
+        
+        def parse_weapon(self, user_entrys : dict):
+            weapon_level = user_entrys
+            tag_damage_dice = 0.0
+            damage_modifier = user_entrys['damage_modifier']
+            to_hit_bonus = user_entrys['to_hit_bonus']
+            
+
+            weapon_tags = self.get_tags(weapon_dict)
+            
+            for tag in weapon_tags:
+                match tag:
+                    case "Automatic":
+                        tag_damage_dice += .5
+                    case "Flexible"|"Cleaving"|"Piercing"|"Incindiary":
+                        tag_damage_dice += 1
+                    case "Explosive":
+                        tag_damage_dice += 2
+                    case "Blunt":
+                        damage_modifier += self.BLUNT_MOD
+                    case "Wieldy":
+                        to_hit_bonus += 1
+
+                    # All Dictionary Entries Methods should only require (Weapon, and userEntry)
+
+            
+            
+     
+
+
+
 
 class WeaponList():
 
-    __weapon_dicts = []
+    #__weapon_dicts = []
     BLUNT_MOD = 4
     GAME_DICE = 10
     SUCCESS = 7
@@ -157,45 +267,8 @@ class WeaponList():
                 shared_tags.append(tag)
         return shared_tags
     
-    def parse_weapon(self, weapon_dict : dict, user_entrys : dict):
-        weapon_level = user_entrys['weapon_level']
-        tag_damage_dice = 0.0
-        damage_modifier = user_entrys['damage_modifier']
-        to_hit_bonus = user_entrys['to_hit_bonus']
-        
-
-        weapon_tags = self.get_tags(weapon_dict)
-        
-        for tag in weapon_tags:
-            match tag:
-                case "Automatic":
-                    tag_damage_dice += .5
-                case "Flexible"|"Cleaving"|"Piercing"|"Incindiary":
-                    tag_damage_dice += 1
-                case "Explosive":
-                    tag_damage_dice += 2
-                case "Blunt":
-                    damage_modifier += self.BLUNT_MOD
-                case "Wieldy":
-                    to_hit_bonus += 1
-
-                # All Dictionary Entries Methods should only require (Weapon, and userEntry)
-
-        weapon_calc_dict = {'weapon_level' : weapon_level,
-                            'tag_damage_dice' : tag_damage_dice, 'damage_modifier' : damage_modifier,
-                            'to_hit_bonus' : to_hit_bonus, 'sucessful_attacks' : get_per_turn(weapon_dict),
-                            'damage_per_attack' : get_base_damage(weapon_dict['default_dice'], tag_damage_dice, damage_modifier),
-                            'sucessful_attacks' : get_per_turn(weapon_dict), 'damage_per_turn' : get_damage_per_turn()}
-        
-        weapon_dict['weapon_level'] = user_entrys['weapon_level']
-        weapon_dict['tag_damage_dice'] = tag_damage_dice
-        weapon_dict['damage_modifier'] = damage_modifier
-        weapon_dict['to_hit_bonus'] = to_hit_bonus
-        weapon_dict['sucessful_attacks'] = get_per_turn(weapon_dict)
-        weapon_dict['damage_per_attack'] = get_base_damage(weapon_dict['default_dice'],tag_damage_dice, damage_modifier)
-        weapon_dict['sucessful_attacks'] = get_per_turn(weapon_dict)
-        weapon_dict['damage_per_turn'] = '%.2f' % (float(weapon_dict['damage_per_attack']) * float(weapon_dict['sucessful_attacks']))
-### END OF WEPAON CLASS        
+    
+### END OF WEAPAON CLASS        
 
 
 
@@ -244,10 +317,3 @@ def get_per_atk(weapon : dict, userInfo):
     damagePerAttack = float(baseDamage) + weapon['damage_modifier']
     return '%f' % damagePerAttack    
 
-def get_per_turn(weapon: dict,sucessRoll = SUCCESS, curCP = 0, val = 0):
-    if(GAME_DICE + weapon['to_hit_bonus']) >= sucessRoll + curCP:
-        temp = (GAME_DICE + weapon['to_hit_bonus']-(sucessRoll + curCP))/10
-        val += temp
-        return get_per_turn(weapon, sucessRoll, curCP + int(weapon['cp']), val)
-    else:
-        return '%.1f' % val
