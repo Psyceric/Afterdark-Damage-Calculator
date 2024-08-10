@@ -52,15 +52,12 @@ class Weapon():
             self.update_weapon(user_entrys['level'], user_entrys['damage_modifier'], user_entrys['to_hit_bonus'], user_entrys['number_of_attacks'])
 
         def update_weapon(self, level : int = 1, damage_modifier : int = 0, to_hit_bonus : int = 0, number_of_attacks : int = 0):
-            print("{0} - {1} - {2} - {3}".format(level, damage_modifier, to_hit_bonus, number_of_attacks))
             _weapon_level = level
             _situational_dice = 0.0
             _damage_modifier = damage_modifier
             _to_hit_bonus = to_hit_bonus
             number_of_attacks = number_of_attacks
             _blunt_mod = 4
-
-            print(self.tags)
             for tag in self.tags:
                 match tag.strip():
                     case "Automatic":
@@ -82,11 +79,11 @@ class Weapon():
             self.damage_roll = self.get_damage_roll()
             self.attack_damage = self.get_attack_damage()
             self.average_damage_per_turn = self.get_average_damage_per_turn()
-            print(self.to_dict())
+            #print(self.to_dict())
         
         def get_average_attacks(self, sucessRoll = 8, curCP = 0, val = 0):
-            if(10 + self.to_hit_bonus) >= sucessRoll + curCP:
-                temp = (10 + self.to_hit_bonus-(sucessRoll + curCP))/10
+            if(10 + self.to_hit_bonus) >= sucessRoll + curCP - 1:
+                temp = (10 + self.to_hit_bonus-(sucessRoll + curCP - 1))/10
                 val += temp
                 return self.get_average_attacks(sucessRoll, curCP + self.cp, val)
             else:

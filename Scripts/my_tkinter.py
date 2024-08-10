@@ -73,16 +73,18 @@ class Table():
     style = None
     frame = None
 
-    def __init__(self, root: Tk, cols, bg = "grey", height = "400", relief = FLAT, anchor = NW, side = TOP, expand = True):
+    def __init__(self, root: Tk, cols, bg = "grey", height = "400", relief = FLAT):
         #Create Frame for holding Table Data
         tableFrame = Frame(root, bg = bg, relief = relief, height = height)
-        tableFrame.pack(side = side, anchor = anchor,expand = expand)
+        tableFrame.grid(column=0, row=0)
 
         #Create Table Object
         self.treeview = MyTreeview(tableFrame, columns=list(cols.keys()), height= 32, selectmode=BROWSE)
-        verScroll = Scrollbar(tableFrame, orient="vertical", command= self.treeview.yview, width= 30)
-        verScroll.pack(side = 'right', fill=BOTH, padx=2, pady=2)
-        self.treeview.pack(side=TOP, anchor=NW, expand=True ,fill=BOTH)
+        verScroll = Scrollbar(tableFrame, orient="vertical", command=self.treeview.yview, width= 30)
+        verScroll.grid (row = 0, rowspan = 5, column = 8, sticky= NSEW )
+        self.treeview.configure(yscrollcommand=verScroll.set)
+        self.treeview.grid(row = 0, rowspan= 5, column = 0, columnspan= 7, sticky=NSEW)
+
 
         self.treeview.tag_configure('green', background="#B5CFB7") 
         self.treeview.tag_configure('yellow', background="#FAEDCE")
@@ -172,7 +174,6 @@ class Table():
 
                 case "to_hit_bonus":
                     head_kwarg['text'] = "To Hit"
-                    head_kwarg['sort_type'] = "int"
                     col_kwarg['width'] = 50
                     col_kwarg['minwidth'] = 50
 
@@ -202,7 +203,6 @@ class Table():
         #Populates Table
         for ele in weapon_list:
             dict = ele.clean_dict()
-
             rowArgs = {'values' : list(dict.values()),'tags' : 'white'}
             match ele.cp:
                 case 1:

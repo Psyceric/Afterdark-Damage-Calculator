@@ -28,20 +28,15 @@ class UserFields(object):
         #Dynamically creates list of user_entry
         self.user_entrys = self.generate_userEntrys(USER_ENTRY_DEFAULT,user_entry_parameters)
         
-
-        # Tkinter Frame object to hold all elements
-        frame = Frame(root, bg = "white", relief=FLAT)
-        frame.pack(side=TOP, anchor=NW, expand=True)
-        
         for count, ele in enumerate(self.user_entrys):
         # Dynamically create user Entry fields, assigning values in userEntries array
 
             # Create Display Lable with Stat name
-            label = Label(frame, text=ele['name'],width=15, bg="white")
+            label = Label(root, text=ele['name'],width=15, bg="white")
             label.grid(row=0, column=count,sticky=EW, padx=1)
 
             # Create userInfo entry object
-            entry = Entry(frame, justify=CENTER,width=15, bg="white", bd=3)
+            entry = Entry(root, justify=CENTER,width=15, bg="white", bd=3)
             entry.grid(row=1, column=count,sticky=EW, padx=10, pady=2)
 
             # Registers and assigns text validation function
@@ -56,11 +51,13 @@ class UserFields(object):
             # Instantiate the Entry Box into the application
             entry.insert(0,ele['default_value'])
 
-
         #Create buttonm, and assign it to trigger update_userInfo when clicked
         #_Callback = function(update_callback, self.get_userEntrys())
-        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=update_callback)
+        calcBtn = Button(root, text="Calculate", width=15, bg="white",command=update_callback)
         calcBtn.grid(row=0, column= len(self.user_entrys)+1, rowspan=2, sticky=NSEW, padx=(25,0))
+
+        # Generate_filters method (self, list[str])
+        # for each in list -> Create button 
 
     def generate_userEntrys(self, default_parameters, _allParameters : list[dict]):
         """Creates new user entry field from list of parameters"""
@@ -88,7 +85,6 @@ class UserFields(object):
     def get_userEntrys(self):
         """Collect all information from user_entrys
            Update internal values"""
-        print("getting")
         returnValues = []
         for count, ele in enumerate(self.user_entrys):
             # For ever field in user_entrys get input, and return list of all inputs    
