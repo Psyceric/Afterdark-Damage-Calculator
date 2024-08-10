@@ -15,9 +15,7 @@ class Weapon():
         attack_damage : float = 10.0 
         average_attacks : float = 1.0
         average_damage_per_turn : float = 10.0
-
-
-
+        item_identifier = None
 
         def __init__(self, 
                      name : str, 
@@ -38,7 +36,6 @@ class Weapon():
             self.magazine_size = magazine_size
 
         def validate_dice(self, value : str):
-            print("TEST" , value)
             DICE_PATTERN = r'/\d{1,3}[d]([4,6,8]|]|1[0,2])($|[+]\d{1,2})$/m'
             result = re.finditer(DICE_PATTERN, value, re.MULTILINE) is not None
             return result
@@ -55,6 +52,7 @@ class Weapon():
             self.update_weapon(user_entrys['level'], user_entrys['damage_modifier'], user_entrys['to_hit_bonus'], user_entrys['number_of_attacks'])
 
         def update_weapon(self, level : int = 1, damage_modifier : int = 0, to_hit_bonus : int = 0, number_of_attacks : int = 0):
+            print("{0} - {1} - {2} - {3}".format(level, damage_modifier, to_hit_bonus, number_of_attacks))
             _weapon_level = level
             _situational_dice = 0.0
             _damage_modifier = damage_modifier
@@ -121,6 +119,34 @@ class Weapon():
         def get_average_damage_per_turn(self):
             return self.attack_damage * self.average_attacks
 
+        def clean_dict(self):
+            _dict = self.to_dict()
+            _dict['tags'] = ",".join(_dict['tags'])
+
+            dmg = self.deconstruct_dice_roll(_dict['damage_roll'])
+            if dmg[2] == 0:
+                _dict['damage_roll'] = "d".join((str(dmg[0]),str(dmg[1])))
+
+            if _dict['to_hit_bonus'] == 0:
+                _dict['to_hit_bonus'] = ""
+            else: 
+                _dict['to_hit_bonus'] = "+" + str(_dict['to_hit_bonus'])
+
+            if _dict['damage_modifier'] == 0:
+                _dict['damage_modifier'] = ""
+            else: 
+                _dict['damage_modifier'] = "+" + str(_dict['damage_modifier'])
+
+            if _dict['situational_dice'] == 0:
+                _dict['situational_dice'] = ""
+            else:
+                _dict['situational_dice'] = "%.1f" % _dict['situational_dice']
+            
+            _dict['attack_damage'] = "%.2f" % _dict['attack_damage']
+            _dict['average_attacks'] = "%.1f" % _dict['average_attacks']
+            _dict['average_damage_per_turn'] = "%.2f" % _dict['average_damage_per_turn']
+            return _dict
+
         def to_dict(self):
             return {
             'name' : self.name,
@@ -137,6 +163,7 @@ class Weapon():
             'attack_damage' : self.attack_damage,
             'average_attacks' : self.average_attacks,
             'average_damage_per_turn' : self.average_damage_per_turn}
+        
 
 
 

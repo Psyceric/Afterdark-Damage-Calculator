@@ -26,10 +26,14 @@ def generate_weapon_list(file : str):
             )
             curWep.update_weapon()
             weapon_list.append(curWep)
- 
-def update_weapon_list(self, userInfo):
-    for ele in self.weapon_list:
-        ele.update_weapon(userInfo)
+
+def update_table():
+    user_entry = my_user_fields.get_userEntrys()
+    print('redraw table with stats : {0}'.format(user_entry))
+    for ele in weapon_list:
+         print(user_entry)
+         ele.update_weapon(user_entry['level'], user_entry['damage_modifier'], user_entry['to_hit_bonus'], user_entry['number_of_attacks'])
+    my_table.redraw_table(weapon_list)
 
 fileName = './resources/Afterdark 1.02 Weapon Values.csv'
 generate_weapon_list(fileName)
@@ -41,7 +45,7 @@ root = Tk()
 root.title("Afterdark™ Damage Per Turn Calculator")
 root.resizable(width=1, height=1)
 
-my_user_fields = UserFields(root = root)                              # - > Add more Init parameters
+my_user_fields = UserFields(root = root, update_callback=update_table)                              # - > Add more Init parameters
 my_table = Table(root=root, cols=cols)
 my_table.initiate_columns(cols=cols)
 my_table.draw_table(weapon_list)

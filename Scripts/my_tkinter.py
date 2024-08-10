@@ -90,7 +90,7 @@ class Table():
         self.treeview.tag_configure('red', background="#C7B7A3")
         self.frame = tableFrame
 
-    def initiate_style(self):
+    def initiate_style(self): # Currently Broken
         self.style = ttk.Style()
         self.style.theme_use('clam')
         self.style.configure('Treeview' , rowheight=22)
@@ -156,7 +156,7 @@ class Table():
                     head_kwarg['text'] = "Damage Dice"
                     col_kwarg['minwidth'] = 80
 
-                case "situation_dice":
+                case "situational_dice":
                     head_kwarg['text'] = "Tag Damage"
                     col_kwarg['minwidth'] = 80
 
@@ -200,9 +200,9 @@ class Table():
 
     def draw_table(self, weapon_list : list[Weapon]):
         #Populates Table
-        for count, ele in enumerate(weapon_list):
-            dict = ele.to_dict()
-            dict['tags'] = ",".join(dict['tags'])
+        for ele in weapon_list:
+            dict = ele.clean_dict()
+
             rowArgs = {'values' : list(dict.values()),'tags' : 'white'}
             match ele.cp:
                 case 1:
@@ -211,7 +211,13 @@ class Table():
                     rowArgs['tags'] = 'yellow'
                 case 3:
                     rowArgs['tags'] = 'orange'
-            self.treeview.insert('', END, text=ele.name, **rowArgs)
+            item = self.treeview.insert('', END, text=ele.name, **rowArgs)
+            ele.item_identifier = item
+
+    def redraw_table(self, weapon_list : list[Weapon]):
+        for ele in weapon_list:
+            dict = ele.clean_dict()
+            self.treeview.item(ele.item_identifier,values=list(dict.values()))
 
     def clear_table(self):
         self.treeview.delete(self.treeview.get_children())

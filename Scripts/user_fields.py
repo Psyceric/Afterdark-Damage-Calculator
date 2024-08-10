@@ -1,10 +1,11 @@
 from tkinter import *
+from functools import partial
 
 class UserFields(object):
     """Handles creating / updating / and gathering information from User Input Fields"""
     user_entrys = []
       
-    def __init__(self, root : Tk):
+    def __init__(self, root : Tk, update_callback):
         """Generates main body of userFields, creating in root frame from Tkinter"""
         
         # Default values for user_entry
@@ -57,7 +58,8 @@ class UserFields(object):
 
 
         #Create buttonm, and assign it to trigger update_userInfo when clicked
-        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=self.get_userEntrys)
+        #_Callback = function(update_callback, self.get_userEntrys())
+        calcBtn = Button(frame, text="Calculate", width=15, bg="white",command=update_callback)
         calcBtn.grid(row=0, column= len(self.user_entrys)+1, rowspan=2, sticky=NSEW, padx=(25,0))
 
     def generate_userEntrys(self, default_parameters, _allParameters : list[dict]):
@@ -86,17 +88,17 @@ class UserFields(object):
     def get_userEntrys(self):
         """Collect all information from user_entrys
            Update internal values"""
-        
+        print("getting")
         returnValues = []
         for count, ele in enumerate(self.user_entrys):
             # For ever field in user_entrys get input, and return list of all inputs    
             currVal = ele['entry_object'].get()
             #Update user_entry with new input
             ele['current_value'] = currVal
-            returnValues.append((ele['name'],ele['entry_object'].get()))
+            returnValues.append((ele['name'],int(ele['entry_object'].get())))
      
         # TODO : Trigger updateTable funtion (returnValues)
-        return returnValues
+        return dict(returnValues)
 
     def validate_int(self, input):
         """Used to validate text input in TTK.Entry"""
