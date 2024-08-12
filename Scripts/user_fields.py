@@ -1,5 +1,6 @@
 from tkinter import *
 from functools import partial
+import re
 
 class UserFields(object):
     """Handles creating / updating / and gathering information from User Input Fields"""
@@ -8,6 +9,9 @@ class UserFields(object):
     def __init__(self, root : Tk, update_callback):
         """Generates main body of userFields, creating in root frame from Tkinter"""
         
+        int_register = root.register(self.validate_int)
+        level_register = root.register(self.validate_level)
+
         # Default values for user_entry
         USER_ENTRY_DEFAULT = {
             "id" : "default",
@@ -16,11 +20,11 @@ class UserFields(object):
             "current_value" : 0,
             "entry_object" : None,
             "colomn_refrence" : None,
-            "entry_register" : self.validate_int}
+            "entry_register" : int_register}
         
         #Array of user_entry's to be created. Parameters must be in USER_ENTRY_DEFAULT dictionary
         user_entry_parameters = [
-            {"id" : "level", "name" : "Level", "default_value" : 1},
+            {"id" : "level", "name" : "Level", "default_value" : 1, "entry_register" : level_register},
             {"id" : "to_hit_bonus" , "name" : "To Hit Bonus"},
             {"id" : "damage_modifier" , "name" : "Damage Modifier"},
             {"id" : "number_of_attacks", "name" : "Number of Attacks"}
@@ -41,8 +45,8 @@ class UserFields(object):
             entry.grid(row=1, column=count,sticky=EW, padx=10, pady=2)
 
             # Registers and assigns text validation function
-            isDigitRegister = root.register(ele['entry_register'])
-            entry.config(validate="key",validatecommand=(isDigitRegister,'%P'))
+            
+            entry.config(validate="key",validatecommand=(ele['entry_register'],'%P'))
 
             #Updates user_entry information about its entryBox
             ele['entry_object'] = entry
@@ -93,14 +97,20 @@ class UserFields(object):
             #Update user_entry with new input
             ele['current_value'] = currVal
             returnValues.append((ele['id'],int(ele['entry_object'].get())))
-        
+
         # TODO : Trigger updateTable funtion (returnValues)
         print(returnValues)
         return dict(returnValues)
 
     def validate_int(self, input):
         """Used to validate text input in TTK.Entry"""
+        print(input)
         return (input.isdigit() or input == "") 
     
+    def validate_level(self, input):
+        print("Level : ", input)
+        pattern = r'^[1-9][0-9]*'
+        result = re.match(pattern,input)
+        return result is not None or input == ""
      #
     ### End of userInfo Class
