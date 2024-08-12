@@ -10,6 +10,7 @@ class UserFields(object):
         
         # Default values for user_entry
         USER_ENTRY_DEFAULT = {
+            "id" : "default",
             "name" : "Default" ,
             "default_value" : 0,
             "current_value" : 0,
@@ -19,10 +20,10 @@ class UserFields(object):
         
         #Array of user_entry's to be created. Parameters must be in USER_ENTRY_DEFAULT dictionary
         user_entry_parameters = [
-            {"name" : "level", "default_value" : 1},
-            {"name" : "to_hit_bonus"},
-            {"name" : "damage_modifier"},
-            {"name" : "number_of_attacks"}
+            {"id" : "level", "name" : "Level", "default_value" : 1},
+            {"id" : "to_hit_bonus" , "name" : "To Hit Bonus"},
+            {"id" : "damage_modifier" , "name" : "Damage Modifier"},
+            {"id" : "number_of_attacks", "name" : "Number of Attacks"}
         ]
 
         #Dynamically creates list of user_entry
@@ -91,14 +92,15 @@ class UserFields(object):
             currVal = ele['entry_object'].get()
             #Update user_entry with new input
             ele['current_value'] = currVal
-            returnValues.append((ele['name'],int(ele['entry_object'].get())))
-     
+            returnValues.append((ele['id'],int(ele['entry_object'].get())))
+        
         # TODO : Trigger updateTable funtion (returnValues)
+        print(returnValues)
         return dict(returnValues)
 
     def validate_int(self, input):
         """Used to validate text input in TTK.Entry"""
-        return (input.isdigit() or input == "")
+        return (input.isdigit() or input == "") 
     
      #
     ### End of userInfo Class

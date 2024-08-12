@@ -249,10 +249,11 @@ class Table():
         for ele in weapon_list:
             dict = ele.clean_dict()
             self.treeview.item(ele.item_identifier,values=list(dict.values()))
-            if ele not in filtered_list:
-                self.hide_item(ele.item_identifier)
-            else: 
-                self.unhide_item(ele.item_identifier)
+            if filtered_list is not None:
+                if ele not in filtered_list:
+                    self.hide_item(ele.item_identifier)
+                else: 
+                    self.unhide_item(ele.item_identifier)
         self.treeview.last_sort()    
 
     def hide_item(self, iid):

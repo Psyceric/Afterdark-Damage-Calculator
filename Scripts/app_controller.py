@@ -28,7 +28,7 @@ def generate_weapon_list(file : str):
         curWep.update_weapon()
         weapon_list.append(curWep)
 
-def update_table(filtered_list = []):
+def update_table(filtered_list = None):
     user_entry = my_user_fields.get_userEntrys()
     print('redraw table with stats : {0}'.format(user_entry))
     for ele in weapon_list:
