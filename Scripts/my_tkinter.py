@@ -245,21 +245,14 @@ class Table():
     def redraw_table(self, weapon_list : list[Weapon], filtered_list : list[Weapon] = []):
         prune = []
         redraw = []
+
         for ele in weapon_list:
             dict = ele.clean_dict()
             self.treeview.item(ele.item_identifier,values=list(dict.values()))
-            if filtered_list:
-                if ele not in filtered_list:
-                    prune.append(ele.item_identifier) # Things to Hide
-                else: 
-                    redraw.append(ele.item_identifier)
-        print("Hiding Items : ", prune)
-        for ele in prune:
-            self.hide_item(ele)
-        
-        for ele in redraw:
-            self.unhide_item(ele)
-        
+            if ele not in filtered_list:
+                self.hide_item(ele.item_identifier)
+            else: 
+                self.unhide_item(ele.item_identifier)
         self.treeview.last_sort()    
 
     def hide_item(self, iid):
