@@ -32,6 +32,8 @@ class MyTreeview(ttk.Treeview):
         print(self._sort_param[4])
         if self._sort_param[4] == True:
             self.sort(self._sort_param[0], self._sort_param[1], self._sort_param[2], self._sort_param[3])
+        else:
+            self.sort(self._sort_param[0], remove_sort = True)
 
     def sort(self, column, data_type = str, reverse = False, callback = None, remove_sort : bool = False, filtered_list : list[Weapon] = []):
         """ Sorts Treeview by Column and Data Type
@@ -251,7 +253,6 @@ class Table():
                     prune.append(ele.item_identifier) # Things to Hide
                 else: 
                     redraw.append(ele.item_identifier)
-
         print("Hiding Items : ", prune)
         for ele in prune:
             self.hide_item(ele)
