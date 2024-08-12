@@ -17,6 +17,7 @@ class Weapon():
         average_damage_per_turn : float = 10.0
         item_identifier = None
         item_index = None
+        attack_limit : int 
 
         def __init__(self, 
                      name : str, 
@@ -60,7 +61,7 @@ class Weapon():
             _situational_dice = 0.0
             _damage_modifier = damage_modifier
             _to_hit_bonus = to_hit_bonus
-            number_of_attacks = number_of_attacks
+            self.attack_limit = number_of_attacks
             _blunt_mod = 4
             for tag in self.tags:
                 match tag.strip():
@@ -83,13 +84,12 @@ class Weapon():
             self.damage_roll = self.get_damage_roll()
             self.attack_damage = self.get_attack_damage()
             self.average_damage_per_turn = self.get_average_damage_per_turn()
-            #print(self.to_dict())
         
-        def get_average_attacks(self, sucessRoll = 8, curCP = 0, val = 0):
-            if(10 + self.to_hit_bonus) >= sucessRoll + curCP - 1:
+        def get_average_attacks(self, sucessRoll = 8, curCP = 0, val = 0, count = 0):
+            if(10 + self.to_hit_bonus) >= sucessRoll + curCP - 1 and (count < self.attack_limit or self.attack_limit == 0):
                 temp = (10 + self.to_hit_bonus-(sucessRoll + curCP - 1))/10
                 val += temp
-                return self.get_average_attacks(sucessRoll, curCP + self.cp, val)
+                return self.get_average_attacks(sucessRoll, curCP + self.cp, val, count = count + 1)
             else:
                 return val
 
