@@ -7,7 +7,7 @@ from weapon import Weapon
 class MyTreeview(ttk.Treeview):
     """Upgrades Tkinter Treeview to allow header sorting functionality
     Adds multiple sort options. """
-    _sort_param : tuple = None
+    _sort_param : tuple
     _headings : list = []
     _sort_callback = None
 
@@ -20,7 +20,7 @@ class MyTreeview(ttk.Treeview):
             func = getattr(self, f"sort_by_{sort_type}", None)
             if func:
                 self._headings.append((column, func, sort_type))   
-                self._sort_param = (column, str, False, func, True)
+                self._sort_param = (column, str, False, func, False)
                 kwargs['command'] = partial(func, column, False)
 
         # Bind function to Right Click callback from Tkinter Treeview
@@ -29,7 +29,9 @@ class MyTreeview(ttk.Treeview):
         return super().heading(column, **kwargs)
     
     def last_sort(self):
-        self.sort(self._sort_param[0], self._sort_param[1], self._sort_param[2], self._sort_param[3])
+        print(self._sort_param[4])
+        if self._sort_param[4] == True:
+            self.sort(self._sort_param[0], self._sort_param[1], self._sort_param[2], self._sort_param[3])
 
     def sort(self, column, data_type = str, reverse = False, callback = None, remove_sort : bool = False, filtered_list : list[Weapon] = []):
         """ Sorts Treeview by Column and Data Type
@@ -52,8 +54,8 @@ class MyTreeview(ttk.Treeview):
         else:
             for heading in self._headings:
                 self.heading(heading[0], command = partial(heading[1], heading[0], False))
-            self._sort_param = (column, data_type, False, callback, FALSE)
-        
+            self._sort_param = (column, data_type, False, callback, False)
+        #print("Sorting Column {0}, by data_type : {1}".format(column,data_type))
         self._sort_callback()
 
     def sort_by_int(self, column, reverse):
@@ -244,12 +246,13 @@ class Table():
         for ele in weapon_list:
             dict = ele.clean_dict()
             self.treeview.item(ele.item_identifier,values=list(dict.values()))
-            
-            if ele not in filtered_list:
-                prune.append(ele.item_identifier) # Things to Hide
-            else: 
-                redraw.append(ele.item_identifier)
+            if filtered_list:
+                if ele not in filtered_list:
+                    prune.append(ele.item_identifier) # Things to Hide
+                else: 
+                    redraw.append(ele.item_identifier)
 
+        print("Hiding Items : ", prune)
         for ele in prune:
             self.hide_item(ele)
         
@@ -260,7 +263,6 @@ class Table():
 
     def hide_item(self, iid):
         d = self.treeview.get_children()
-        print(d)
         if iid in d:
             self.treeview.detach(iid)
             self.hidden_items.append(iid)
