@@ -16,6 +16,7 @@ class Weapon():
         average_attacks : float = 1.0
         average_damage_per_turn : float = 10.0
         item_identifier = None
+        item_index = None
 
         def __init__(self, 
                      name : str, 
@@ -35,18 +36,21 @@ class Weapon():
             self.category = category
             self.magazine_size = magazine_size
 
+        def __str__(self):
+            return self.name
+
         def validate_dice(self, value : str):
             DICE_PATTERN = r'/\d{1,3}[d]([4,6,8]|]|1[0,2])($|[+]\d{1,2})$/m'
             result = re.finditer(DICE_PATTERN, value, re.MULTILINE) is not None
             return result
 
-        def has_tags(self, *tags): #TODO
+        def has_tags(self, requested_tags : list): #TODO
             """Determins if the weapon contains all tags specified"""
-            tags = set(self.tags)
-            requested_tags = set(list(tags))
+            my_tags = set(self.tags)
+            requested_tags = set(requested_tags)
             
             # Returns if all requested_tags is a sub-list of all tags
-            return requested_tags.intersection(tags) == requested_tags
+            return requested_tags.intersection(my_tags) == requested_tags
 
         def update_weapon(self, user_entrys : dict):
             self.update_weapon(user_entrys['level'], user_entrys['damage_modifier'], user_entrys['to_hit_bonus'], user_entrys['number_of_attacks'])

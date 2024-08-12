@@ -2,7 +2,7 @@ from tkinter import Tk
 from tkinter import * 
 import pandas as pd
 import os
-from my_tkinter import Table, MyTreeview
+from my_tkinter import Table, FilterMenu
 from weapon import Weapon
 from user_fields import UserFields
 
@@ -28,12 +28,26 @@ def generate_weapon_list(file : str):
         curWep.update_weapon()
         weapon_list.append(curWep)
 
-def update_table():
+def update_table(filtered_list = []):
     user_entry = my_user_fields.get_userEntrys()
     print('redraw table with stats : {0}'.format(user_entry))
     for ele in weapon_list:
          ele.update_weapon(user_entry['level'], user_entry['damage_modifier'], user_entry['to_hit_bonus'], user_entry['number_of_attacks'])
-    my_table.redraw_table(weapon_list)
+    my_table.redraw_table(weapon_list, filtered_list)
+
+def filter_update():
+    filter = my_filter_menu.get_filter()
+    sucess = []
+    for weapon in weapon_list:
+        if weapon.has_tags(filter['tags']) or not filter['tags']:
+            if weapon.category in filter['categorys'] or not filter['categorys']:
+                if weapon.cp in filter['cps'] or not filter['cps']:
+                    sucess.append(weapon)
+    update_table(sucess)
+    #print("filter Updating... \n", sucess)
+
+def table_callback():
+    pass
 
 fileName = './resources/Afterdark 1.02 Weapon Values.csv'
 generate_weapon_list(fileName)
@@ -66,24 +80,13 @@ ctr_right = Frame(center, bg='green', width=150, height=190, padx=3, pady=3)
 ctr_mid.grid(row=0, column=0, sticky=NSEW)
 ctr_right.grid(row=0, column=1, sticky=NSEW)
 
-my_user_fields = UserFields(root = top_frame, update_callback=update_table)                              # - > Add more Init parameters
-my_table = Table(root=ctr_mid, cols=cols)
+my_user_fields = UserFields(top_frame, update_table)                              # - > Add more Init parameters
+my_table = Table(root=ctr_mid, cols=cols,callback=table_callback)
 my_table.initiate_columns(cols=cols)
 my_table.draw_table(weapon_list)
-
-filter_frame = Frame(ctr_right, bg='yellow', width=150, height=300, padx=3, pady=3, relief= FLAT)
-filter_frame.grid(row=0, column=0, sticky=NSEW)
-
-#filter_frame.grid_rowconfigure(0, weight=1)
-#filter_frame.grid_columnconfigure(0, weight=1)
+my_filter_menu = FilterMenu(ctr_right, weapon_list, filter_update)
 
 
-my_filters = Label(filter_frame, text= "Filters", justify = CENTER,  width=24)
-my_filters.grid(column=0, columnspan = 3, row=0,  sticky=EW)
-
-
-my_filters = Label(filter_frame, text= "Fear", justify= CENTER, width=6)
-my_filters.grid(column=1, row=1)
 
 
 root.mainloop()
