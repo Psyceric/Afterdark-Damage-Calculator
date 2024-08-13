@@ -25,7 +25,7 @@ class Weapon():
                      cp : int, 
                      tags : list[str],
                      category : str, 
-                     magazine_size : int = None):
+                     magazine_size : str = None):
             
             # for var in [attr for attr in dir(Weapon) if not callable(getattr(Weapon,attr)) and not attr.startswith("__")]:
             #     print(var)

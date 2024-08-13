@@ -243,9 +243,6 @@ class Table():
             ele.item_index = self.treeview.index(item)
 
     def redraw_table(self, weapon_list : list[Weapon], filtered_list : list[Weapon] = []):
-        prune = []
-        redraw = []
-
         for ele in weapon_list:
             dict = ele.clean_dict()
             self.treeview.item(ele.item_identifier,values=list(dict.values()))

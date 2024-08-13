@@ -103,7 +103,11 @@ class UserFields(object):
         return dict(returnValues)
 
     def validate_int(self, input):
-        """Used to validate text input in TTK.Entry"""
+        """Used to validate text input in TTK.Entry
+        
+        Keyword arguments:
+        real -- the real part (default 0.0)
+        imag -- the imaginary part (default 0.0)"""
         print(input)
         return (input.isdigit() or input == "") 
     
@@ -112,5 +116,5 @@ class UserFields(object):
         pattern = r'^[1-9][0-9]*'
         result = re.match(pattern,input)
         return result is not None or input == ""
-     #
+     # 
     ### End of userInfo Class

@@ -15,7 +15,7 @@ def generate_weapon_list(file : str):
     local_path = os.getcwd()
     parent_directory = os.path.abspath(os.path.join(local_path,os.pardir))
     absolute_directory = os.path.abspath(os.path.join(parent_directory,file))
-    csv = pd.read_csv(absolute_directory).to_dict(orient="records")        
+    csv = pd.read_csv(absolute_directory, keep_default_na=False).to_dict(orient="records")        
     for weapon_dict in csv:
         curWep = Weapon(
         name = weapon_dict['name'],
