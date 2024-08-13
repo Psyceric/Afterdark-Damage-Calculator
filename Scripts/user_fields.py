@@ -17,7 +17,6 @@ class UserFields(object):
             "id" : "default",
             "name" : "Default" ,
             "default_value" : 0,
-            "current_value" : 0,
             "entry_object" : None,
             "colomn_refrence" : None,
             "entry_register" : int_register}
@@ -50,7 +49,6 @@ class UserFields(object):
 
             #Updates user_entry information about its entryBox
             ele['entry_object'] = entry
-            ele['current_value'] = entry.get()
             ele['colomn_refrence'] = count
             
             # Instantiate the Entry Box into the application
@@ -92,13 +90,13 @@ class UserFields(object):
            Update internal values"""
         returnValues = []
         for count, ele in enumerate(self.user_entrys):
-            # For ever field in user_entrys get input, and return list of all inputs    
-            currVal = ele['entry_object'].get()
-            #Update user_entry with new input
-            ele['current_value'] = currVal
-            returnValues.append((ele['id'],int(ele['entry_object'].get())))
+            entry_value = ele['entry_object'].get()
 
-        # TODO : Trigger updateTable funtion (returnValues)
+            if not entry_value:
+                entry_value = ele['default_value']
+                ele['entry_object'].insert(0, entry_value)
+
+            returnValues.append((ele['id'],int(entry_value)))
         print(returnValues)
         return dict(returnValues)
 
