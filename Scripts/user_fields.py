@@ -79,8 +79,7 @@ class UserFields(object):
         calcBtn = Button(root, text = "Calculate", width=15, bg = "white", command = calculate_callback)
         calcBtn.grid(row = 0, column = len(self._user_entrys) + 1, rowspan = 2, sticky = NSEW, padx = (25,0))
 
-    @property
-    def entrys(self):
+    def get_entrys(self):
         """Returns dict of _user_entrys values. If empty sets to default values.
         
         Collects all entry values of _user_entrys, if the value has a empty text field, we populate it with the _user_entry's default value.
@@ -98,7 +97,7 @@ class UserFields(object):
                 user_entry['entry_object'].insert(0, value)
 
             # Adds entry to dictionary with user_entry name as Key, and Entry Value as value.
-            entrys_values.update({user_entry['name']: value})
+            entrys_values.update({user_entry['name']: int(value)})
         print("Current user_entry values are :", entrys_values)
         return entrys_values
     

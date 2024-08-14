@@ -29,7 +29,7 @@ def generate_weapon_list(file : str):
         weapon_list.append(curWep)
 
 def update_table(filtered_list = None):
-    user_entry = my_user_fields.entrys
+    user_entry = my_user_fields.get_entrys()
     print('redraw table with stats : {0}'.format(user_entry))
     for ele in weapon_list:
          ele.update_weapon(user_entry['Level'], user_entry['Damage Modifier'], user_entry['To Hit Bonus'], user_entry['Number of Attacks'])

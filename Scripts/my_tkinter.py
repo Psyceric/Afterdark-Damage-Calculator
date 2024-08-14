@@ -5,93 +5,162 @@ import datetime as objDateTime
 from weapon import Weapon
 
 class MyTreeview(ttk.Treeview):
-    """Upgrades Tkinter Treeview to allow header sorting functionality
-    Adds multiple sort options. """
-    _sort_param : tuple
+    """Upgrade to the Tkinter treeview, allowing for sorting of headings by data_types
+
+    Assigning headings a sort_type allows you to click it to sort the table by those values.
+    Clicking again will invert the sort. Right clicking will clear the sort, and return to original ordering.
+
+    Attributes:
+        _previous_sort : A dict that details the previous sort that was completed, and if it should be ignored.
+            {
+            column : str, default "Default"
+                Display name in GUI and keys in property getter 'self.get_entrys()'.
+            data_type : int, default 0
+                Value that will populate the Entry when created, and if calulate button is clicked with an empty field
+            reversed : TK.Entry, Default None
+                Refrence object to the Tkinter.Entry GUI Object
+            callback : string variable name of TK registered Callback Method - "_int_validation" or "_level_validation"
+                Used to assign text validation callback method in entry_object
+            }
+        _headings : List of tuples that has some general information regarding the headings  
+    """
+
+    _previous_sort : dict = {"column" : "#0", "data_type" : str, "reverse" : False, "callback" : None, "ignore_sort" : True}
     _headings : list = []
-    _sort_callback = None
 
     def heading(self, column, sort_type : str = None, **kwargs):
-        """Dynamically set headings Callback function using sort_type
-        If arguments 'sort_type' exists & 'command' does not exists
-        Find Function in class of sort_type 
-        If it exists assing callback function to heading"""
+        """Supports the sort_type argument to the Tkinter Treeview Heading
+
+        Adds the argument sort_type that can be assigned must be assigned when creating a heading
+        and binds callback methods to left-clicking and right-clicking the headings
+
+        Args:
+            column: string that is used by Tkinter Treeview as the iid for columns.
+            sort_type: string that represents the "data_type" that is wished to be sorted by. 
+                ['int', 'str', 'date', 'float'] are currently supported "sort_types"
+            **kwargs: these are arguments that are default to the heading super method.
+                text: text
+                    The text to display in the column heading.
+                image: imageName
+                    Specifies an image to display to the right of the column heading.
+                anchor: anchors
+                    Specifies how the heading text should be aligned. One of the standard Tk anchor values.
+                command: callback
+                    A callback to be invoked when the heading label is pressed.
+        """
+        # Does our header have a sort type, and command is not already set
         if sort_type and not hasattr(kwargs, 'command'):
+            # Find callback function for the sort_type requsted
             func = getattr(self, f"sort_by_{sort_type}", None)
             if func:
-                self._headings.append((column, func, sort_type))   
-                self._sort_param = (column, str, False, func, False)
+                # Adds heading information to list of all headings
+                self._headings.append({"column" : column, "sort_type" : sort_type, "sort_func" : func})
+                self._previous_sort.update({'column' : column, 'callback' : func})
+                # Assign callback functions for Left-Click, and Right-Click
                 kwargs['command'] = partial(func, column, False)
+                self.bind("<Button-3>", self.on_right_click)
 
-        # Bind function to Right Click callback from Tkinter Treeview
-        self.bind("<Button-3>", self.on_right_click)
-
+        # Creates Tkinter Header normally with our new arguments
         return super().heading(column, **kwargs)
     
     def last_sort(self):
-        print(self._sort_param[4])
-        if self._sort_param[4] == True:
-            self.sort(self._sort_param[0], self._sort_param[1], self._sort_param[2], self._sort_param[3])
-        else:
-            self.sort(self._sort_param[0], remove_sort = True)
-
-    def sort(self, column, data_type = str, reverse = False, callback = None, remove_sort : bool = False, filtered_list : list[Weapon] = []):
-        """ Sorts Treeview by Column and Data Type
-        Creats List of all row ID's 
-        Converts to list of values in a column
-        Sort list by data_type"""
-        self._sort_column = column
-        allRows = self.get_children('')
-        sortedRows = [(self.set(row, column), row) for row in allRows]
-        sortedRows.sort(key=lambda tup: data_type(tup[int(remove_sort)]), reverse=reverse)
-
-        # Move each row to index it appears in sortedRows
-        # Re-assigns callback function to header with oppsite sort order
-        for index, (_, row) in enumerate(sortedRows):
-            self.move(row, '', index)
+        """Sort the Treeview by the previously sorted type, or ignore the sort
         
-        if remove_sort is False:
-            self.heading(column, command=partial(callback, column, not reverse))
-            self._sort_param = (column, data_type, reverse, callback, True)
+        If we are ignoring the previous sort, we need to sort the table at their column, and pass the argument remove_sort = true
+        This will return the treeview items to their original index location.
+        """
+        if self._previous_sort['ignore_sort'] == True:
+            self.sort(self._previous_sort["column"], remove_sort = True)
         else:
+            parameters = dict(self._previous_sort)
+            parameters.pop("ignore_sort")
+            self.sort(**parameters)
+
+    def sort(self, column , data_type = str, reverse = False, callback = None, remove_sort : bool = False):
+        """
+        Sort a column, and changes the sort direction of the header that clicked it.
+
+        At a column, we will sort the by an entered data type associated with a "_sort_by_" function.
+
+        Args:
+            column: string that is used by Tkinter Treeview as the iid for columns.
+            data_type: a type variable that we use to sort the column in "list.sort()".
+            callback: associated function that will be assigned when clicking header. 
+            reverse: boolean that represents if we want to return to the original treeview orientation.
+        """
+        rows = self.get_children('')
+        column_values = [(self.set(row, column), row) for row in rows]
+        
+        # Sort value in column by data_type. If remove_sort = true this will return table to original orientation
+        # Than move the row into its index in the sorted list
+        column_values.sort(key = lambda t: data_type(t[int(remove_sort)]), reverse=reverse)
+        for index, (_, row) in enumerate(column_values):
+            self.move(row, '', index)
+
+        if remove_sort is True:
+            # Set all headings callback function to the default orientation (Not Reversed)
             for heading in self._headings:
-                self.heading(heading[0], command = partial(heading[1], heading[0], False))
-            self._sort_param = (column, data_type, False, callback, False)
-        #print("Sorting Column {0}, by data_type : {1}".format(column,data_type))
-        self._sort_callback()
+                self.heading(heading['column'], command = partial(heading['sort_func'], heading['column'], False))
+        else:
+            # Set this columns heading command to sort in the reversed orientation
+            self.heading(column, command=partial(callback, column, not reverse))
+        # Save information regarding this sort to be refrenced by 'self.last_sort()', and return this sort dictionary
+        self._previous_sort.update({'column' : column, "data_type" :  data_type, 'reverse' : reverse, 'callback' : callback, "ignore_sort" : remove_sort})
+        return self._previous_sort
 
     def sort_by_int(self, column, reverse):
-        """When clicking header, Sorts table by Columns integers."""
+        """When clicking header, Sorts table by Columns integers.
+        
+        Args:
+            column: string that is used by Tkinter Treeview as the iid for columns.
+            reverse: boolean that represents if we want to return to the original treeview orientation.
+        """
         self.sort(column = column, data_type = int, reverse = reverse,  callback = self.sort_by_int)
  
     def sort_by_str(self, column, reverse):
-        """When clicking header, Sorts table by Columns strings."""
+        """When clicking header, Sorts table by Columns strings.
+        
+        Args:
+            column: string that is used by Tkinter Treeview as the iid for columns.
+            reverse: boolean that represents if we want to return to the original treeview orientation.
+        """
         self.sort(column = column, data_type = str, reverse = reverse,  callback = self.sort_by_str)
 
     def sort_by_date(self, column, reverse):
-        """When clicking header, Sorts table by Columns dates."""
-        def _str_to_datetime(string): 
-            # Used to convert string to dateTime Object
-            return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
+        """When clicking header, Sorts table by Columns dates.
+        
+        Args:
+            column: string that is used by Tkinter Treeview as the iid for columns.
+            reverse: boolean that represents if we want to return to the original treeview orientation.
+        """        
         self.sort(column = column, data_type= objDateTime, reverse = reverse,  callback = self.sort_by_date)
+        def _str_to_datetime(string): 
+            """Converts String to objDateTime."""
+            return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
 
     def sort_by_float(self, column, reverse):
-        """When clicking header, Sorts table by Columns floats."""
+        """When clicking header, Sorts table by Columns floats.
+                
+        Args:
+            column: string that is used by Tkinter Treeview as the iid for columns.
+            reverse: boolean that represents if we want to return to the original treeview orientation.
+        """   
         self.sort(column = column, data_type = float, reverse = reverse,  callback = self.sort_by_float)
     
     def on_right_click(self, event):
-        """When rightclicking identify if clicking header, and clear sort"""
-        region = self.identify_region(event.x, event.y)
-        column = self.identify("column", event.x, event.y)
+        """Triggered when right-clicking header treeview, if Header will clear the sort of the treeview
+        
+        Args:
+            event: Tkinter treeview event 
+        """
+        # If the clicken area of treeview is a heading, clear the treeviews sort.
+        region = self.identify_region(event.x, event.y) 
         if region == "heading":
+            column = self.identify("column", event.x, event.y)
             self.sort(column = column, remove_sort=True)
 
-    def assign_sort_callback(self, callback):
-        self._sort_callback = callback
-     #
-    ### End of MyTreeView Class
-
-class Table():
+class Table():    
+     
     treeview = None
     style = None
     frame = None
@@ -117,7 +186,6 @@ class Table():
         self.treeview.tag_configure('red', background="#C7B7A3")
         self.frame = tableFrame
         self.update_callback = callback
-        self.treeview.assign_sort_callback(callback=callback)
 
     def initiate_style(self): # Currently Broken
         self.style = ttk.Style()
@@ -251,6 +319,7 @@ class Table():
                     self.hide_item(ele.item_identifier)
                 else: 
                     self.unhide_item(ele.item_identifier)
+        print(self.treeview._previous_sort)
         self.treeview.last_sort()    
 
     def hide_item(self, iid):
