@@ -3,116 +3,138 @@ from functools import partial
 import re
 
 class UserFields(object):
-    """Handles creating / updating / and gathering information from User Input Fields"""
-    user_entrys = []
+    """
+    The UserFields object creates and maintains multiple Tkinter Entry Objects.
+
+    Dynamically generates a group of Tkinter Labels and Entrys. Has the ability collect and return the data of all Entry objects when 'entrys' property is accessed
+    The Calculate button that triggers a callback function to our app_controller script.
+
+    Attributes:
+        _user_entrys : a list of dictionaries detailing default values, object refrences, and how to generate GUI elements.
+        _root : A Tkinter Container for GUI Elements
+        _int_validation : string used by Tkinter to refrence the 'validate_int' callback method
+        _level_validation : string used by Tkinter to refrence the 'validation_level' callback method
+        _USER_ENTRY_DEFAULT : A dict defining default a userEntry group:
+            {
+            name : str, default "Default"
+                Display name in GUI and keys in property getter 'self.entrys'.
+            default_value : int, default 0
+                Value that will populate the Entry when created, and if calulate button is clicked with an empty field
+            entry_object : TK.Entry, Default None
+                Refrence object to the Tkinter.Entry GUI Object
+            entry_text_validator : string variable name of TK registered Callback Method - "_int_validation" or "_level_validation"
+                Used to assign text validation callback method in entry_object
+            }
+    """
+
+    _user_entrys : dict = []
+    _root : Tk = None
+    _int_validation : str = None
+    _level_validation : str = None
       
-    def __init__(self, root : Tk, update_callback):
-        """Generates main body of userFields, creating in root frame from Tkinter"""
-        
-        int_register = root.register(self.validate_int)
-        level_register = root.register(self.validate_level)
-
-        # Default values for user_entry
-        USER_ENTRY_DEFAULT = {
-            "id" : "default",
-            "name" : "Default" ,
-            "default_value" : 0,
-            "entry_object" : None,
-            "colomn_refrence" : None,
-            "entry_register" : int_register}
-        
-        #Array of user_entry's to be created. Parameters must be in USER_ENTRY_DEFAULT dictionary
-        user_entry_parameters = [
-            {"id" : "level", "name" : "Level", "default_value" : 1, "entry_register" : level_register},
-            {"id" : "to_hit_bonus" , "name" : "To Hit Bonus"},
-            {"id" : "damage_modifier" , "name" : "Damage Modifier"},
-            {"id" : "number_of_attacks", "name" : "Number of Attacks"}
-        ]
-
-        #Dynamically creates list of user_entry
-        self.user_entrys = self.generate_userEntrys(USER_ENTRY_DEFAULT,user_entry_parameters)
-        
-        for count, ele in enumerate(self.user_entrys):
-        # Dynamically create user Entry fields, assigning values in userEntries array
-
-            # Create Display Lable with Stat name
-            label = Label(root, text=ele['name'],width=15, bg="white")
-            label.grid(row=0, column=count,sticky=EW, padx=1)
-
-            # Create userInfo entry object
-            entry = Entry(root, justify=CENTER,width=15, bg="white", bd=3)
-            entry.grid(row=1, column=count,sticky=EW, padx=10, pady=2)
-
-            # Registers and assigns text validation function
-            
-            entry.config(validate="key",validatecommand=(ele['entry_register'],'%P'))
-
-            #Updates user_entry information about its entryBox
-            ele['entry_object'] = entry
-            ele['colomn_refrence'] = count
-            
-            # Instantiate the Entry Box into the application
-            entry.insert(0,ele['default_value'])
-
-        #Create buttonm, and assign it to trigger update_userInfo when clicked
-        #_Callback = function(update_callback, self.get_userEntrys())
-        calcBtn = Button(root, text="Calculate", width=15, bg="white",command=update_callback)
-        calcBtn.grid(row=0, column= len(self.user_entrys)+1, rowspan=2, sticky=NSEW, padx=(25,0))
-
-        # Generate_filters method (self, list[str])
-        # for each in list -> Create button 
-
-    def generate_userEntrys(self, default_parameters, _allParameters : list[dict]):
-        """Creates new user entry field from list of parameters"""
-
-        def generate_userEntry(default_parameters, parameter):
-            """Creates dictionary that has changes from user_entry
-            that are shared betweent he two dictionaries"""
-            
-            # Create Local copy, and loop through all items
-            user_entry = dict(default_parameters)
-            for key, value in parameter.items():
-                if key in default_parameters.keys():
-                    # If this item's key is shared between the two. Update local copy
-                    user_entry[key] = value  
-
-            # Return parameter list for generating user_entry      
-            return user_entry
-
-        #Generates parameter dictionary for each object in _allParameters
-        allUserEntries = []
-        for parameter in _allParameters:
-            allUserEntries.append(generate_userEntry(default_parameters, parameter = parameter))
-        return allUserEntries
+    _USER_ENTRY_DEFAULT = {
+    "name" : "Default" ,
+    "default_value" : 0,
+    "entry_object" : None,
+    "entry_text_validator" : "int_validation"}
     
-    def get_userEntrys(self):
-        """Collect all information from user_entrys
-           Update internal values"""
-        returnValues = []
-        for count, ele in enumerate(self.user_entrys):
-            entry_value = ele['entry_object'].get()
+    def __init__(self, root : Tk, user_entry_parameters : list[dict], calculate_callback ):
+        """Initilize a group of GUI elements with user_entry_parameters, and a Calcualte button
 
-            if not entry_value:
-                entry_value = ele['default_value']
-                ele['entry_object'].insert(0, entry_value)
-
-            returnValues.append((ele['id'],int(entry_value)))
-        print(returnValues)
-        return dict(returnValues)
-
-    def validate_int(self, input):
-        """Used to validate text input in TTK.Entry
+        user_entry_parameters must be a Composite of USER_ENTRY_PARAMETER constant. 
+        Creates elements left to right in order entered in user_entry_parameters.
         
-        Keyword arguments:
-        real -- the real part (default 0.0)
-        imag -- the imaginary part (default 0.0)"""
-        print(input)
+        Args:
+            root: Base Tkinter Containers for GUI elements.
+                Can be Frame, or Application object.
+            user_entry_parameters : list of dictionaries that are composites of USER_ENTRY_FIELDS. 
+                Each dictionary will generate a unique Tkinter Label & Entry GUI Object.
+            calculate_callback : Method to be assigned to the Calculate Tkinter button.
+                Trigger callback function when button is clicked.
+        """
+        self._root = root
+        # Register validation callback methods with our root Tkinter Container 
+        self.int_validation = root.register(self._validate_int)
+        self.level_validation = root.register(self._validate_level)
+
+        for count, ele in enumerate(user_entry_parameters):
+            # Updates default values, validates new dictionary is inhereted from _USER_ENTRY_DEFAULT
+            entry_data = dict(self.USER_ENTRY_DEFAULT)
+            entry_data.update(ele)
+            assert len(entry_data) == len(self._USER_ENTRY_DEFAULT), "Invalid Paramters when generating UserFields at index : {0}, element : {1}".format(count, ele)
+
+            # Instaniate Label and Entry in the next available row, and adds its object to dict
+            label = Label(root, text = entry_data['name'], width = 15, bg = "white")
+            label.grid(row=0, column = count, sticky = EW, padx = 1)
+            entry = Entry(root, justify=CENTER, width = 15, bg="white", bd = 3)
+            entry.grid(row=1, column=count, sticky=EW, padx=10, pady=2)
+            entry.insert(0,entry_data['default_value'])
+            entry_data['entry_object'] = entry
+
+            # Assigns Validaiton callback function to Tkinter entry object
+            entry.config(validate = "key", validatecommand = (getattr(self, entry_data['entry_text_validator']), '%P'))
+            self._user_entrys.append(entry_data)
+
+        # Create Tkinter button, and assign it with Calculate_callback method.
+        calcBtn = Button(root, text = "Calculate", width=15, bg = "white", command = calculate_callback)
+        calcBtn.grid(row = 0, column = len(self._user_entrys) + 1, rowspan = 2, sticky = NSEW, padx = (25,0))
+
+    @property
+    def entrys(self):
+        """Returns dict of _user_entrys values. If empty sets to default values.
+        
+        Collects all entry values of _user_entrys, if the value has a empty text field, we populate it with the _user_entry's default value.
+        and than return the values including that default value.
+        """
+        entrys_values = {}
+
+        
+        for user_entry in self._user_entrys:
+            # Get all values from Tkitner Entry objects
+            value = user_entry['entry_object'].get()
+            if not value:
+                # If the Entry Field is empty, set it to default, and populate field with default value
+                value = user_entry['default_value']
+                user_entry['entry_object'].insert(0, value)
+
+            # Adds entry to dictionary with user_entry name as Key, and Entry Value as value.
+            entrys_values.update({user_entry['name']: value})
+        print("Current user_entry values are :", entrys_values)
+        return entrys_values
+    
+    @property
+    def USER_ENTRY_DEFAULT(self):
+        """Getter for Constant dict : _USER_ENTRY_DEFAULT"""
+        return self._USER_ENTRY_DEFAULT
+    
+    def _validate_int(self, input):
+        """Callback function that validates text is an integer
+        
+        This method is registered with Tkinter's root container,
+        and is used inhereted USER_ENTRY_DEFAULT dict's under the key 'entry_text_validator'
+        The string for this will be 'validate_int'
+
+        Args:
+            input : string that is to be validated by this method
+        
+        Returns:
+            If input string is empty or is a made of integers
+        """
         return (input.isdigit() or input == "") 
     
-    def validate_level(self, input):
-        print("Level : ", input)
-        pattern = r'^[1-9][0-9]*'
+    def _validate_level(self, input):
+        """Callback function that validates text is a supported Level integer
+        
+        This method is registered with Tkinter's root container,
+        and is used inhereted USER_ENTRY_DEFAULT dict's under the key 'entry_text_validator'
+        The string for this will be 'validate_level'
+
+        Args:
+            input : string that is to be validated by this method
+        
+        Returns:
+            If input string empty, or an interger in range (1,+inf)
+        """
+        pattern = r'^[1-9][0-9]*$'
         result = re.match(pattern,input)
         return result is not None or input == ""
-     # 
-    ### End of userInfo Class

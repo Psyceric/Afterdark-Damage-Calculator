@@ -29,10 +29,10 @@ def generate_weapon_list(file : str):
         weapon_list.append(curWep)
 
 def update_table(filtered_list = None):
-    user_entry = my_user_fields.get_userEntrys()
+    user_entry = my_user_fields.entrys
     print('redraw table with stats : {0}'.format(user_entry))
     for ele in weapon_list:
-         ele.update_weapon(user_entry['level'], user_entry['damage_modifier'], user_entry['to_hit_bonus'], user_entry['number_of_attacks'])
+         ele.update_weapon(user_entry['Level'], user_entry['Damage Modifier'], user_entry['To Hit Bonus'], user_entry['Number of Attacks'])
     my_table.redraw_table(weapon_list, filtered_list)
 
 def filter_update():
@@ -80,8 +80,14 @@ ctr_right = Frame(center, bg='green', width=150, height=190, padx=3, pady=3)
 ctr_mid.grid(row=0, column=0, sticky=NSEW)
 ctr_right.grid(row=0, column=1, sticky=NSEW)
 
-my_user_fields = UserFields(top_frame, update_table)                              # - > Add more Init parameters
-my_table = Table(root=ctr_mid, cols=cols,callback=table_callback)
+field_parameters = [
+    {"name" : "Level", "default_value" : 1, "entry_text_validator" : "level_validation"},
+    {"name" : "To Hit Bonus"},
+    {"name" : "Damage Modifier"},
+    {"name" : "Number of Attacks"}]
+
+my_user_fields = UserFields(top_frame, field_parameters, update_table)                 # - > Add more Init parameters
+my_table = Table(root = ctr_mid, cols = cols, callback = table_callback)
 my_table.initiate_columns(cols=cols)
 my_table.draw_table(weapon_list)
 my_filter_menu = FilterMenu(ctr_right, weapon_list, filter_update)
