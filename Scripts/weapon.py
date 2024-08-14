@@ -19,23 +19,13 @@ class Weapon():
         item_index = None
         attack_limit : int 
 
-        def __init__(self, 
-                     name : str, 
-                     default_dice : str,
-                     cp : int, 
-                     tags : list[str],
-                     category : str, 
-                     magazine_size : str = None):
-            
-            # for var in [attr for attr in dir(Weapon) if not callable(getattr(Weapon,attr)) and not attr.startswith("__")]:
-            #     print(var)
-            #     pass
-            self.name = name
-            self.default_dice = default_dice
-            self.cp = cp
-            self.tags = tags
-            self.category = category
-            self.magazine_size = magazine_size
+        def __init__(self, weapon_dict : dict = None, name : str = "Default", default_dice : str = "3d4", cp : int = 1, tags : list[str] = ["Wieldy", "Cleaving"], category : str = "Swords", magazine_size : str = "N/A", **kwargs):
+            _weapon_dict = weapon_dict
+            if weapon_dict is None:
+                _weapon_dict = kwargs
+            for _key, val in _weapon_dict.items():
+                setattr(self, _key, val)
+            self.update_weapon()
 
         def __str__(self):
             return self.name

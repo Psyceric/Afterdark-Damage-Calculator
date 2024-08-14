@@ -22,7 +22,8 @@ class MyTreeview(ttk.Treeview):
             callback : string variable name of TK registered Callback Method - "_int_validation" or "_level_validation"
                 Used to assign text validation callback method in entry_object
             }
-        _headings : List of tuples that has some general information regarding the headings  
+        _headings : List of tuples that has information regarding the headings  
+            (Column, Sort_type, Sort_Function)
     """
 
     _previous_sort : dict = {"column" : "#0", "data_type" : str, "reverse" : False, "callback" : None, "ignore_sort" : True}
@@ -160,32 +161,46 @@ class MyTreeview(ttk.Treeview):
             self.sort(column = column, remove_sort=True)
 
 class Table():    
-     
     treeview = None
     style = None
     frame = None
-    update_callback = None
     hidden_items = []
+    COLUMN_DICT = {'sort_type' : 'str' , 'text' : 'Default', 'anchor': 'c' , 'width' : 80 , 'minwidth' : 60 , 'stretch' : True}
 
-    def __init__(self, root: Tk, cols, bg = "grey", height = "400", relief = FLAT, callback = None):
-        #Create Frame for holding Table Data
+    def __init__(self, root: Tk, cols, bg = "grey", height = "400", relief = FLAT, color_tags : dict = None):
+        #Create Frame for holding Table Data.
         tableFrame = Frame(root, bg = bg, relief = relief, height = height)
         tableFrame.grid(column=0, row=0)
-
-        #Create Table Object
+        self.frame = tableFrame
+         
+        # Creates table with column populated form 'cols'.
         self.treeview = MyTreeview(tableFrame, columns=list(cols.keys()), height= 32, selectmode=BROWSE)
+        self.treeview.grid(row = 0, rowspan= 5, column = 0, columnspan= 7, sticky=NSEW)
+        # Creates scrollbar, and assigns its control functions.
         verScroll = Scrollbar(tableFrame, orient="vertical", command=self.treeview.yview, width= 30)
         verScroll.grid (row = 0, rowspan = 5, column = 8, sticky= NSEW )
         self.treeview.configure(yscrollcommand=verScroll.set)
-        self.treeview.grid(row = 0, rowspan= 5, column = 0, columnspan= 7, sticky=NSEW)
+        # Generates tags to assign colors to rows.
+        for name,color in color_tags.items():
+            self.treeview.tag_configure(name, background=color)
 
+        # Create table from cols dictionary instrutions
+        # Must be formatted as [{'Column #1 Name' : {COLUMN_DICT PARAMETER DICT}},...]
+        self.treeview.heading("#0", sort_type='str', text="Default Column")
+        self.treeview.column("#0", width=0, minwidth= 0, stretch=False)
+        for ele in cols.items(): # For each of the dictionarys key, create a heading and column
+            # Default allowed kwargs
+            head_kwarg = {'sort_type' : 'str' , 'text' : ele}
+            col_kwarg  = {'anchor': 'c' , 'width' : 80 , 'minwidth' : 60 , 'stretch' : True}
+            
+            # Update our default kwargs with our new values if applicable
+            header_parameters = dict(ele[1])
+            head_kwarg.update(pair for pair in header_parameters.items() if pair[0] in head_kwarg.keys())
+            col_kwarg.update(pair for pair in header_parameters.items() if pair[0] in col_kwarg.keys())
 
-        self.treeview.tag_configure('green', background="#B5CFB7") 
-        self.treeview.tag_configure('yellow', background="#FAEDCE")
-        self.treeview.tag_configure('orange', background="#F8C794") 
-        self.treeview.tag_configure('red', background="#C7B7A3")
-        self.frame = tableFrame
-        self.update_callback = callback
+            # Edit existing columns with new parameters
+            self.treeview.heading(column=ele[0], **head_kwarg)
+            self.treeview.column(column=ele[0], **col_kwarg)
 
     def initiate_style(self): # Currently Broken
         self.style = ttk.Style()
@@ -200,100 +215,7 @@ class Table():
                 ])    
         self.style.configure('my.Treeview.Heading', background='gray', font=('Calibri Bold', 10), relief='none')
         return self.style
-
-    def get_style(self):
-        return self.style
     
-    def get_treeview(self):
-        return self.treeview()
-    
-    def initiate_columns(self, cols):  # HERE
-        #Modifies "Icon Column" - Makes it 0 Width
-        self.treeview.heading("#0", sort_type='str', text="Weapons List")
-        self.treeview.column("#0", width=0, minwidth= 0, stretch=False)
-    
-        for count, ele in enumerate(cols.keys()): # For each of the dictionarys key, create a heading and column
-            #Default Row Parameters
-            head_kwarg = {'sort_type' : 'str' , 'text' : ele}
-            col_kwarg  = {'anchor': 'c' , 'width' : 80 , 'minwidth' : 60 , 'stretch' : True}
-            #Column Parameters
-            match ele: 
-                case "name":
-                    head_kwarg['text'] = "Weapon Name"
-                    col_kwarg['width'] = 240
-                    col_kwarg['minwidth'] = 240
-                case "default_dice":
-                    head_kwarg['text'] = "Default Roll"
-                    col_kwarg['width'] = 90
-                    col_kwarg['minwidth'] = 90
-                case "cp": 
-                    head_kwarg['text'] = "CP"
-                    col_kwarg['width'] = 40
-                    col_kwarg['minwidth'] = 30
-
-                case "tags":
-                    head_kwarg['text'] = "Weapon Tags"
-                    col_kwarg['width'] = 300
-                    col_kwarg['minwidth'] = 300
-
-                case "magazine_size":
-                    head_kwarg['text'] = "Mag Size"
-                    col_kwarg['width'] = 90
-                    col_kwarg['minwidth'] = 90
-
-                case "category":
-                    head_kwarg['text'] = "Weapon Type"
-                    col_kwarg['width'] = 120
-                    col_kwarg['minwidth'] = 120
-
-                case "level":
-                    head_kwarg['text'] = "Level"
-
-                case "damage_dice":
-                    head_kwarg['text'] = "Damage Dice"
-                    col_kwarg['minwidth'] = 80
-
-                case "situational_dice":
-                    head_kwarg['text'] = "Tag Damage"
-                    col_kwarg['minwidth'] = 80
-
-                case "damage_modifier":
-                    head_kwarg['text'] = "Damage Mod"
-                    col_kwarg['width'] = 90
-                    col_kwarg['minwidth'] = 90
-
-                case "damage_roll":
-                    head_kwarg['text'] = "Damage Roll"
-                    col_kwarg['width'] = 90
-                    col_kwarg['minwidth'] = 90
-
-                case "to_hit_bonus":
-                    head_kwarg['text'] = "To Hit"
-                    col_kwarg['width'] = 50
-                    col_kwarg['minwidth'] = 50
-
-                case "attack_damage":
-                    head_kwarg['text'] = "Dmg Per Attack"
-                    head_kwarg['sort_type'] = "float"
-                    col_kwarg['width'] = 120
-                    col_kwarg['minwidth'] = 80
-
-                case"average_attacks":
-                    head_kwarg['text'] = "Attacks"
-                    head_kwarg['sort_type'] = "float"
-                    col_kwarg['width'] = 80
-                    col_kwarg['minwidth'] = 80
-
-                case"average_damage_per_turn":
-                    head_kwarg['text'] = "Dmg Per Turn"
-                    head_kwarg['sort_type'] = "float"
-                    col_kwarg['width'] = 80
-                    col_kwarg['minwidth'] = 80
-                case _:
-                    print("NON AVAILABLE FOR :", ele)
-            self.treeview.heading(column=ele, **head_kwarg)
-            self.treeview.column(column=ele, **col_kwarg)
-
     def draw_table(self, weapon_list : list[Weapon]):
         #Populates Table
         for ele in weapon_list:
@@ -335,10 +257,11 @@ class Table():
             self.treeview.move(iid, '', len(d))
             self.hidden_items.remove(iid)
 
-    def clear_table(self):
+    def delete_table(self):
         self.treeview.delete(self.treeview.get_children())
 
-class FilterMenu(): 
+class FilterMenu():  
+     
     frame : Frame
     _tags : list[str]
     _names : list[str]

@@ -17,15 +17,8 @@ def generate_weapon_list(file : str):
     absolute_directory = os.path.abspath(os.path.join(parent_directory,file))
     csv = pd.read_csv(absolute_directory, keep_default_na=False).to_dict(orient="records")        
     for weapon_dict in csv:
-        curWep = Weapon(
-        name = weapon_dict['name'],
-        default_dice = weapon_dict['default_dice'],
-        cp = weapon_dict['cp'],
-        tags = weapon_dict['tags'].split(','),
-        category = weapon_dict['category'],
-        magazine_size = weapon_dict['magazine_size'],
-        )
-        curWep.update_weapon()
+        weapon_dict['tags'] = weapon_dict['tags'].split(',')
+        curWep = Weapon(weapon_dict = weapon_dict)
         weapon_list.append(curWep)
 
 def update_table(filtered_list = None):
@@ -46,12 +39,45 @@ def filter_update():
     update_table(sucess)
     #print("filter Updating... \n", sucess)
 
-def table_callback():
-    pass
-
 fileName = './resources/Afterdark 1.02 Weapon Values.csv'
 generate_weapon_list(fileName)
-cols = weapon_list[0].to_dict() # Might be cursed
+keys = weapon_list[0].to_dict().keys()
+cols = []
+for key in keys:
+    param = {}
+    match key: 
+        case 'name':
+            param = {'text' : 'Weapon Name', 'width' : 200, 'minwidth' : 200}
+        case 'default_dice':
+            param = {'text' : 'Default Roll', 'width' : 90, 'minwidth' : 90}
+        case 'cp': 
+            param = {'text' : 'CP', 'width' : 90, 'minwidth' : 30}
+        case 'tags':
+            param = {'text' : 'Weapon Tags', 'width' : 300, 'minwidth' : 300}
+        case 'magazine_size':
+            param = {'text' : 'Mag Size', 'width' : 90, 'minwidth' : 90}
+        case 'category':
+            param = {'text' : 'Weapon Type', 'width' : 120, 'minwidth' : 120}
+        case 'level':
+            param = {'text' : 'Level'}
+        case 'damage_dice':
+            param = {'text' : 'Damage dice'}
+        case 'situational_dice':
+            param = {'text' : 'Tag Damage'}
+        case 'damage_modifier':
+            param = {'text' : 'Damage mod'}
+        case 'damage_roll' : 
+            param = {'text' : 'Damage Roll', 'width' : 90, 'minwidth' : 90}
+        case 'to_hit_bonus':
+            param = {'text' : 'To Hit', 'width' : 50, 'minwidth' : 50}
+        case 'attack_damage':
+            param = {'text' : "Dmg Per Attack", 'sort_type' : 'float', 'width' : 120, 'minwidth' : 80}
+        case 'average_attacks':
+            param = {'text' : "Attacks", 'sort_type' : 'float', 'width' : 80, 'minwidth' : 80}
+        case 'average_damage_per_turn':
+            param = {'text' : 'Dmg Per Turn', 'sort_type' : 'float', 'width' : 80, 'minwidth' : 80}
+    cols.append((key, param))
+cols = dict(cols)
 
 #Initilize Application
 root = Tk()
@@ -86,9 +112,9 @@ field_parameters = [
     {"name" : "Damage Modifier"},
     {"name" : "Number of Attacks"}]
 
-my_user_fields = UserFields(top_frame, field_parameters, update_table)                 # - > Add more Init parameters
-my_table = Table(root = ctr_mid, cols = cols, callback = table_callback)
-my_table.initiate_columns(cols=cols)
+my_user_fields = UserFields(top_frame, field_parameters, update_table)
+color_tags = {'green' : '#B5CFB7', 'yellow' : '#FAEDCE', 'orange' : "#F8C794", 'red' : '#C7B7A3'}
+my_table = Table(root = ctr_mid, cols = cols, color_tags=color_tags)
 my_table.draw_table(weapon_list)
 my_filter_menu = FilterMenu(ctr_right, weapon_list, filter_update)
 
