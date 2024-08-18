@@ -160,14 +160,48 @@ class MyTreeview(ttk.Treeview):
             column = self.identify("column", event.x, event.y)
             self.sort(column = column, remove_sort=True)
 
-class Table():    
+class Table():
+    """Tkinter Treeview Wrapper for interacting with Weapons.
+
+    Impliments ability to choose which elements of Treeview are visible,
+    and redraw the treeview with new values.
+
+    Attributes:
+        treeview: Tkinter Treeview Object refrence.
+        frame: Tkinter Root frame object refrence.
+        hidden_items: List of row item_IDs that are hidden from the Treeview.
+        COLUMN_DICT: Dict default parameters for creating columns.
+            {
+            sort_type: String of data_type column is being sorted by. Currently Valid - ['int', 'str', 'date', 'float'].
+            text: String text value for Header display.
+            anchor: String that indicates the text Justification 'c'.
+            width: Int width of column in Screen Units.
+            minwidth: Int Minimum Width of Column in Screen Units when dragged together in the treeview.
+            stretch: Bool If column elements should take up all the space in its width, or only be as large as necessary.
+            }
+    """
+       
     treeview = None
-    style = None
     frame = None
     hidden_items = []
     COLUMN_DICT = {'sort_type' : 'str' , 'text' : 'Default', 'anchor': 'c' , 'width' : 80 , 'minwidth' : 60 , 'stretch' : True}
+    def __init__(self, root : Tk, cols : dict, bg : str = "grey", height : int = 400, relief = FLAT, color_tags : dict = None):
+        """Initilize our Treeview wrapper, and treeview object
 
-    def __init__(self, root: Tk, cols, bg = "grey", height = "400", relief = FLAT, color_tags : dict = None):
+        Generate a table with the column parameters in the Cols list, and create it inside the root TK object
+        Create color tags and assign default styling parameters.
+        
+        Args:
+            root: Base Tkinter Containers for GUI elements.
+                Can be Frame, or Application object.
+            cols : dictionary with name of column and parameters for creating it.
+                Key - column_name : Value - Kwargs that are an instance of column_dict.
+            bg : color that will be assigned to the background.
+            height: int height of the local tableFrame Object in Screen Units
+            relief : Bool that indicates if elements will be connected smoothly when gaps are between the elements.
+            color_dict : dict that details the creation of tags for Colors
+                Key - tag_name : Value - Hex Code for Color
+        """
         #Create Frame for holding Table Data.
         tableFrame = Frame(root, bg = bg, relief = relief, height = height)
         tableFrame.grid(column=0, row=0)
@@ -177,18 +211,17 @@ class Table():
         self.treeview = MyTreeview(tableFrame, columns=list(cols.keys()), height= 32, selectmode=BROWSE)
         self.treeview.grid(row = 0, rowspan= 5, column = 0, columnspan= 7, sticky=NSEW)
         # Creates scrollbar, and assigns its control functions.
-        verScroll = Scrollbar(tableFrame, orient="vertical", command=self.treeview.yview, width= 30)
-        verScroll.grid (row = 0, rowspan = 5, column = 8, sticky= NSEW )
-        self.treeview.configure(yscrollcommand=verScroll.set)
+        ver_scroll = Scrollbar(tableFrame, orient="vertical", command=self.treeview.yview, width= 30)
+        ver_scroll.grid (row = 0, rowspan = 5, column = 8, sticky= NSEW )
+        self.treeview.configure(yscrollcommand=ver_scroll.set)
         # Generates tags to assign colors to rows.
         for name,color in color_tags.items():
             self.treeview.tag_configure(name, background=color)
 
-        # Create table from cols dictionary instrutions
-        # Must be formatted as [{'Column #1 Name' : {COLUMN_DICT PARAMETER DICT}},...]
         self.treeview.heading("#0", sort_type='str', text="Default Column")
         self.treeview.column("#0", width=0, minwidth= 0, stretch=False)
-        for ele in cols.items(): # For each of the dictionarys key, create a heading and column
+        # Create table from cols dictionary instrutions
+        for ele in cols.items():
             # Default allowed kwargs
             head_kwarg = {'sort_type' : 'str' , 'text' : ele}
             col_kwarg  = {'anchor': 'c' , 'width' : 80 , 'minwidth' : 60 , 'stretch' : True}
@@ -202,66 +235,81 @@ class Table():
             self.treeview.heading(column=ele[0], **head_kwarg)
             self.treeview.column(column=ele[0], **col_kwarg)
 
-    def initiate_style(self): # Currently Broken
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
-        self.style.configure('Treeview' , rowheight=22)
-        self.style.layout('my.Treeview',
-                [('Treeview.field', {'sticky': 'nswe', 'border': '1', 'children': [
-                    ('Treeview.padding', {'sticky': 'nswe', 'children': [
-                        ('Treeview.treearea', {'sticky': 'nswe'})
-                        ]})
-                    ]})
-                ])    
-        self.style.configure('my.Treeview.Heading', background='gray', font=('Calibri Bold', 10), relief='none')
-        return self.style
-    
     def draw_table(self, weapon_list : list[Weapon]):
-        #Populates Table
+        """Populate table with weapons taking up each row the first time.
+        
+        Assign row color based on weapon_cp, and save the information regarding its place in the table with
+        item_identifier and item_index.
+        """
         for ele in weapon_list:
+            # For each weapon, get the dict of valuess, and set the color equal to that of its CP.
+            # Use KWARGS to future proof any additional attributes we would like to apply to this item.
             dict = ele.clean_dict()
-            rowArgs = {'values' : list(dict.values()),'tags' : 'white'}
+            row_KWARGS = {'values' : list(dict.values()),'tags' : 'white'}
             match ele.cp:
                 case 1:
-                    rowArgs['tags'] = 'green'
+                    row_KWARGS['tags'] = 'green'
                 case 2:
-                    rowArgs['tags'] = 'yellow'
+                    row_KWARGS['tags'] = 'yellow'
                 case 3:
-                    rowArgs['tags'] = 'orange'
-            item = self.treeview.insert('', END, text=ele.name, **rowArgs)
+                    row_KWARGS['tags'] = 'orange'
+
+            # Add the weapon as a row to the table, and store that weapons treeview item information.
+            item = self.treeview.insert('', END, text=ele.name, **row_KWARGS)
             ele.item_identifier = item
             ele.item_index = self.treeview.index(item)
 
     def redraw_table(self, weapon_list : list[Weapon], filtered_list : list[Weapon] = []):
+        """Update all values of weapons in the treeview, and show only weapons in filtered_list
+        
+        Sorts by the previous sort type if it is available. Currently requires sending in a list of weapons as filtered_list
+        """
         for ele in weapon_list:
+            # Update the display of all weapon values
             dict = ele.clean_dict()
             self.treeview.item(ele.item_identifier,values=list(dict.values()))
+            # If the weapon is not inside the filtered_list. Hide it from the treeview
             if filtered_list is not None:
                 if ele not in filtered_list:
                     self.hide_item(ele.item_identifier)
                 else: 
                     self.unhide_item(ele.item_identifier)
-        print(self.treeview._previous_sort)
+        # Must sort by previous sort parameters to keep order of table.
         self.treeview.last_sort()    
 
-    def hide_item(self, iid):
-        d = self.treeview.get_children()
-        if iid in d:
-            self.treeview.detach(iid)
-            self.hidden_items.append(iid)
-            print("Hiding Item : ", iid)
+    def hide_item(self, item_id):
+        """Hide an item_id from the treeview if it is currently visible.
+        
+        Save all items_ids in the hidden_items list.
+        Detach the Item from the treeview. it still exists but is not visible.  
+        Documnation : https://docs.python.org/3/library/tkinter.ttk.html#tkinter.ttk.Treeview.detach        
+        """
+        all_items = self.treeview.get_children()
+        if item_id in all_items:
+            self.treeview.detach(item_id)
+            self.hidden_items.append(item_id)
+            print("Hiding Item : ", item_id)
 
-    def unhide_item(self, iid):
-        d = self.treeview.get_children()
-        if iid in self.hidden_items:
-            self.treeview.move(iid, '', len(d))
-            self.hidden_items.remove(iid)
+    def unhide_item(self, item_id):
+        """Unhide an item_id from the treeview if it is currently not visible.
+        
+        Reattach item to the end of the treeview. Reattach is an allias for Treeview.move(item, parent, index)
+        Documenation : https://docs.python.org/3/library/tkinter.ttk.html#tkinter.ttk.Treeview.reattach
+        """
+        all_items = self.treeview.get_children()
+        if item_id in self.hidden_items:
+            self.treeview.reattach(item_id, '', len(all_items))
+            self.hidden_items.remove(item_id)
 
     def delete_table(self):
+        """Currently un-used method that will all items in the table.
+        
+        Should be avoided using. Will require re-running self.draw_table with a weapon_list
+        to continue functionality.
+        """
         self.treeview.delete(self.treeview.get_children())
 
-class FilterMenu():  
-     
+class FilterMenu():       
     frame : Frame
     _tags : list[str]
     _names : list[str]

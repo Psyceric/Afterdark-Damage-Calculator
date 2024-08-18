@@ -9,6 +9,20 @@ from user_fields import UserFields
 
 weapon_list = []
 
+def initiate_style(self): # Currently Broken
+        self.style = Tk.Style()
+        self.style.theme_use('clam')
+        self.style.configure('Treeview' , rowheight=22)
+        self.style.layout('my.Treeview',
+                [('Treeview.field', {'sticky': 'nswe', 'border': '1', 'children': [
+                    ('Treeview.padding', {'sticky': 'nswe', 'children': [
+                        ('Treeview.treearea', {'sticky': 'nswe'})
+                        ]})
+                    ]})
+                ])    
+        self.style.configure('my.Treeview.Heading', background='gray', font=('Calibri Bold', 10), relief='none')
+        return self.style
+
 def generate_weapon_list(file : str):
     """From a CSV File or a file path, populate the weapons_list"""
     

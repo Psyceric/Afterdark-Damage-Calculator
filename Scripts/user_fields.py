@@ -6,7 +6,7 @@ class UserFields(object):
     """
     The UserFields object creates and maintains multiple Tkinter Entry Objects.
 
-    Dynamically generates a group of Tkinter Labels and Entrys. Has the ability collect and return the data of all Entry objects when 'entrys' property is accessed
+    Dynamically generates a group of Tkinter Labels and Entrys. Has the ability collect and return the data of all Entry objects when 'get_entrys()' property is accessed
     The Calculate button that triggers a callback function to our app_controller script.
 
     Attributes:
@@ -17,7 +17,7 @@ class UserFields(object):
         _USER_ENTRY_DEFAULT : A dict defining default a userEntry group:
             {
             name : str, default "Default"
-                Display name in GUI and keys in property getter 'self.entrys'.
+                Display name in GUI and keys in property getter 'self.get_entrys()'.
             default_value : int, default 0
                 Value that will populate the Entry when created, and if calulate button is clicked with an empty field
             entry_object : TK.Entry, Default None
@@ -31,7 +31,6 @@ class UserFields(object):
     _root : Tk = None
     _int_validation : str = None
     _level_validation : str = None
-      
     _USER_ENTRY_DEFAULT = {
     "name" : "Default" ,
     "default_value" : 0,
