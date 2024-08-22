@@ -1,5 +1,5 @@
-from Scripts import app_controller
+from Scripts.app_controller import AppController
 
 if __name__ == "__main__":
-    myapp = app_controller.AppController()
+    myapp = AppController()
     myapp.main()
