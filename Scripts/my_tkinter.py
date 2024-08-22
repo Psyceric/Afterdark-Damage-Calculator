@@ -11,18 +11,18 @@ class MyTreeview(ttk.Treeview):
     Clicking again will invert the sort. Right clicking will clear the sort, and return to original ordering.
 
     Attributes:
-        _previous_sort : A dict that details the previous sort that was completed, and if it should be ignored.
+        _previous_sort: A dict that details the previous sort that was completed, and if it should be ignored.
             {
-            column : str, default "Default"
+            column: str, default "Default"
                 Display name in GUI and keys in property getter 'self.get_entrys()'.
-            data_type : int, default 0
+            data_type: int, default 0
                 Value that will populate the Entry when created, and if calulate button is clicked with an empty field
-            reversed : TK.Entry, Default None
+            reversed: TK.Entry, Default None
                 Refrence object to the Tkinter.Entry GUI Object
-            callback : string variable name of TK registered Callback Method - "_int_validation" or "_level_validation"
+            callback: string variable name of TK registered Callback Method - "_int_validation" or "_level_validation"
                 Used to assign text validation callback method in entry_object
             }
-        _headings : List of tuples that has information regarding the headings  
+        _headings: List of tuples that has information regarding the headings  
             (Column, Sort_type, Sort_Function)
     """
 
@@ -309,95 +309,108 @@ class Table():
         """
         self.treeview.delete(self.treeview.get_children())
 
-class FilterMenu():       
-    frame : Frame
-    _tags : list[str]
-    _names : list[str]
-    _categorys : list[str]
-    _cps : list[str]
+class FilterMenu():
+    """Container for multiple Tkinter Objects that make filters for sorting a Table object
+
+    Generate filter Listboxes that contain all Tags, Categorys, CP Cost. When clicked / updated trigger callback function assigned at __init__
+
+    Attributes:
+        _callback: A callback function that is triggered when you click an element in the listbox.
+            This will update the _filters dict, and save the information of all selected filters.
+        _filters: Dict that contains arrays of all list elements.
+        _tags: Dict detailing the default values of the Tags Filter Listbox, and its values.
+        _categorys: Dict detailing the default values of the Categorys Filter Listbox, and its values.
+        _names: Dict detailing the default values of the names Searchbox.
+        _cps: Dict detailing the default values of the CPs Filter Listbox, and its values.
+    """       
     _callback = None
-
-
     _filters = {
         "tags" : [],
         "names" : [],
         "categorys" : [],
         "cps" : []
     }
+    _tags = {
+        "name" : "Tags",
+        "width" : 18, 
+        "values" : []
+        }
+    _categorys = {
+        "name" : "Categorys",
+        "width" : 15, 
+        "values" : []
+        }     
+    _names = {
+        "name" : "Names",
+        "width" : 15, 
+        "values" : []
+        }
+    _cps = {
+        "name" : "CPs",
+        "width" : 7, 
+        "values" : []
+        }
 
     def __init__(self, root : Tk, weapons_list : list[Weapon], filter_callback):
+        """Create Tkinter elements based on inputted weapon_list, and trigger callback function when selections are made.
+
+        Update and maintain a list of _filters when clicked based on the weapons "Tags", "Categorys", "Names", and "CPs".
+        Generates Tags, Categorys, and CPs as a list_box that is selectable in the UI root frame
+        
+        Args:
+            root: Base Tkinter Containers for GUI elements.
+                Can be Frame, or Application object.
+            weapons_list: List of Weapon objects that will create all the filter parameters available to the user.
+            filter_callback: Callback function taht is assigned to elements in the UI when left-clicked.
+        """
         filter_frame = Frame(root, bg='yellow', width=150, height=300, padx=3, pady=3, relief= FLAT)
         filter_frame.grid(row=0, column=0, sticky=NSEW)
         my_filters = Label(filter_frame, text= "Filters", justify = CENTER,  width=6, height = 1, font=("Arial", 25) )
         my_filters.grid(column=0, columnspan = 3, row=0,  sticky=EW)
-        
-
-        self.get_info(weapons_list)
         self._callback = filter_callback
+
+        # Initilize values for all weapons. Ignoring Repeating Items.
+        for ele in weapons_list:
+            for tag in ele.tags:
+                if tag not in self._tags['values']:
+                    self._tags['values'].append(tag)
+            if ele.category not in self._categorys['values']:
+                self._categorys['values'].append(ele.category)
+            if ele.name not in self._names['values']:
+                self._names['values'].append(ele.name)
+            if ele.cp not in self._cps['values']:
+                self._cps['values'].append(ele.cp)
+        self._tags['values'].sort()
+        self._names['values'].sort()
+
+        # Create a listbox for tags, categorys, and cps.
         for count, ele in enumerate((self._tags, self._categorys, self._cps)):
+            # Create label; and listbox with height equal to the length of the values array in this element. 
             label = Label(filter_frame, text=ele['name'], width=ele['width'])
             label.grid(column=count, row=3, sticky=NSEW, pady = (25,0))
-            
             listbox = Listbox(filter_frame, selectmode="multiple", exportselection=0, height=len(ele['values']), width=ele['width'], activestyle='none')
             listbox.config( justify=CENTER, borderwidth=3)
+            
+            # Add entry to listbox with that entrys name. (Blunt, Wieldy, Ranged 15/25, ...)
             for entry in ele['values']:
                 listbox.insert(END, entry)
 
+            # Assign clicking to trigger _update_filters method
             func = getattr(self, "_update_filters")
             listbox.bind("<<ListboxSelect>>", partial(func, ele))
             listbox.grid(column=count, row=4, sticky=NSEW)
         
     def _update_filters(self, element, event : Event):
+        """Triggers before our callback function, and gathers the information regarding the change in filter, and keeps data in self._filters."""
         listbox = event.widget
-        res = [listbox.get(sel) for sel in listbox.curselection()]
-        self._filters[str(element['name'].lower())] = res
-        print(self._filters)
+        # Get list of all selected items in listbox.
+        selected_items = [listbox.get(sel) for sel in listbox.curselection()]
+        # Set dict value of the listbox's name (Tags, Categorys, CPs) equal to the new list.
+        self._filters[str(element['name'].lower())] = selected_items
+        # Trigger out app_controller callback function.
         self._callback()
 
     def get_filter(self):
-        return self._filters
-
-    def get_info(self, weapons_list : list[Weapon]):
-        # Maybe do this via to_dict of wepaon
-        all_tags = []
-        all_categorys = []
-        all_names = []
-        all_cp = []
-
-        for ele in weapons_list:
-            for tag in ele.tags:
-                if tag not in all_tags:
-                    all_tags.append(tag)
-            if ele.category not in all_categorys:
-                all_categorys.append(ele.category)
-            if ele.name not in all_names:
-                all_names.append(ele.name)
-            if ele.cp not in all_cp:
-                all_cp.append(ele.cp)
-        all_tags.sort()
-        all_names.sort()
+        """Getter for self._filters"""
+        return self._filters 
     
-        self._tags = {
-        "name" : "Tags",
-        "width" : 18, 
-        "values" : all_tags
-        }
-
-        self._categorys = {
-        "name" : "Categorys",
-        "width" : 15, 
-        "values" : all_categorys
-        }
-        
-        self._names = {
-        "name" : "Names ",
-        "width" : 15, 
-        "values" : all_names
-        }
-
-        self._cps = {
-        "name" : "CPs",
-        "width" : 7, 
-        "values" : all_cp
-        }
-
