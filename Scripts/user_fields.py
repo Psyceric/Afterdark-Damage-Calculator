@@ -1,5 +1,4 @@
 from tkinter import *
-from functools import partial
 import re
 
 class UserFields(object):
@@ -32,7 +31,7 @@ class UserFields(object):
     _int_validation : str = None
     _level_validation : str = None
     _USER_ENTRY_DEFAULT = {
-    "name" : "Default" ,
+    "name" : "Default",
     "default_value" : 0,
     "entry_object" : None,
     "entry_text_validator" : "int_validation"}
@@ -79,7 +78,8 @@ class UserFields(object):
         calcBtn.grid(row = 0, column = len(self._user_entrys) + 1, rowspan = 2, sticky = NSEW, padx = (25,0))
 
     def get_entrys(self):
-        """Returns dict of _user_entrys values. If empty sets to default values.
+        """
+        Returns dict of _user_entrys values. If empty sets to default values.
         
         Collects all entry values of _user_entrys, if the value has a empty text field, we populate it with the _user_entry's default value.
         and than return the values including that default value.

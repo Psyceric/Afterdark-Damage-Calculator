@@ -2,10 +2,11 @@ from tkinter import *
 from tkinter import ttk
 from functools import partial
 import datetime as objDateTime
-from weapon import Weapon
+from .weapon import Weapon
 
 class MyTreeview(ttk.Treeview):
-    """Upgrade to the Tkinter treeview, allowing for sorting of headings by data_types
+    """
+    Upgrade to the Tkinter treeview, allowing for sorting of headings by data_types
 
     Assigning headings a sort_type allows you to click it to sort the table by those values.
     Clicking again will invert the sort. Right clicking will clear the sort, and return to original ordering.
@@ -30,7 +31,8 @@ class MyTreeview(ttk.Treeview):
     _headings : list = []
 
     def heading(self, column, sort_type : str = None, **kwargs):
-        """Supports the sort_type argument to the Tkinter Treeview Heading
+        """
+        Supports the sort_type argument to the Tkinter Treeview Heading
 
         Adds the argument sort_type that can be assigned must be assigned when creating a heading
         and binds callback methods to left-clicking and right-clicking the headings
@@ -65,7 +67,8 @@ class MyTreeview(ttk.Treeview):
         return super().heading(column, **kwargs)
     
     def last_sort(self):
-        """Sort the Treeview by the previously sorted type, or ignore the sort
+        """
+        Sort the Treeview by the previously sorted type, or ignore the sort
         
         If we are ignoring the previous sort, we need to sort the table at their column, and pass the argument remove_sort = true
         This will return the treeview items to their original index location.
@@ -110,7 +113,8 @@ class MyTreeview(ttk.Treeview):
         return self._previous_sort
 
     def sort_by_int(self, column, reverse):
-        """When clicking header, Sorts table by Columns integers.
+        """
+        When clicking header, Sorts table by Columns integers.
         
         Args:
             column: string that is used by Tkinter Treeview as the iid for columns.
@@ -119,7 +123,8 @@ class MyTreeview(ttk.Treeview):
         self.sort(column = column, data_type = int, reverse = reverse,  callback = self.sort_by_int)
  
     def sort_by_str(self, column, reverse):
-        """When clicking header, Sorts table by Columns strings.
+        """
+        When clicking header, Sorts table by Columns strings.
         
         Args:
             column: string that is used by Tkinter Treeview as the iid for columns.
@@ -128,7 +133,8 @@ class MyTreeview(ttk.Treeview):
         self.sort(column = column, data_type = str, reverse = reverse,  callback = self.sort_by_str)
 
     def sort_by_date(self, column, reverse):
-        """When clicking header, Sorts table by Columns dates.
+        """
+        When clicking header, Sorts table by Columns dates.
         
         Args:
             column: string that is used by Tkinter Treeview as the iid for columns.
@@ -140,7 +146,8 @@ class MyTreeview(ttk.Treeview):
             return objDateTime.strptime(string, "%Y-%m-%d %H:%M:%S")
 
     def sort_by_float(self, column, reverse):
-        """When clicking header, Sorts table by Columns floats.
+        """
+        When clicking header, Sorts table by Columns floats.
                 
         Args:
             column: string that is used by Tkinter Treeview as the iid for columns.
@@ -149,7 +156,8 @@ class MyTreeview(ttk.Treeview):
         self.sort(column = column, data_type = float, reverse = reverse,  callback = self.sort_by_float)
     
     def on_right_click(self, event):
-        """Triggered when right-clicking header treeview, if Header will clear the sort of the treeview
+        """
+        Triggered when right-clicking header treeview, if Header will clear the sort of the treeview
         
         Args:
             event: Tkinter treeview event 
@@ -161,7 +169,8 @@ class MyTreeview(ttk.Treeview):
             self.sort(column = column, remove_sort=True)
 
 class Table():
-    """Tkinter Treeview Wrapper for interacting with Weapons.
+    """
+    Tkinter Treeview Wrapper for interacting with Weapons.
 
     Impliments ability to choose which elements of Treeview are visible,
     and redraw the treeview with new values.
@@ -186,7 +195,8 @@ class Table():
     hidden_items = []
     COLUMN_DICT = {'sort_type' : 'str' , 'text' : 'Default', 'anchor': 'c' , 'width' : 80 , 'minwidth' : 60 , 'stretch' : True}
     def __init__(self, root : Tk, cols : dict, bg : str = "grey", height : int = 400, relief = FLAT, color_tags : dict = None):
-        """Initilize our Treeview wrapper, and treeview object
+        """
+        Initilize our Treeview wrapper, and treeview object
 
         Generate a table with the column parameters in the Cols list, and create it inside the root TK object
         Create color tags and assign default styling parameters.
@@ -236,7 +246,8 @@ class Table():
             self.treeview.column(column=ele[0], **col_kwarg)
 
     def draw_table(self, weapon_list : list[Weapon]):
-        """Populate table with weapons taking up each row the first time.
+        """
+        Populate table with weapons taking up each row the first time.
         
         Assign row color based on weapon_cp, and save the information regarding its place in the table with
         item_identifier and item_index.
@@ -260,7 +271,8 @@ class Table():
             ele.item_index = self.treeview.index(item)
 
     def redraw_table(self, weapon_list : list[Weapon], filtered_list : list[Weapon] = []):
-        """Update all values of weapons in the treeview, and show only weapons in filtered_list
+        """
+        Update all values of weapons in the treeview, and show only weapons in filtered_list
         
         Sorts by the previous sort type if it is available. Currently requires sending in a list of weapons as filtered_list
         """
@@ -278,7 +290,8 @@ class Table():
         self.treeview.last_sort()    
 
     def hide_item(self, item_id):
-        """Hide an item_id from the treeview if it is currently visible.
+        """
+        Hide an item_id from the treeview if it is currently visible.
         
         Save all items_ids in the hidden_items list.
         Detach the Item from the treeview. it still exists but is not visible.  
@@ -291,7 +304,8 @@ class Table():
             print("Hiding Item : ", item_id)
 
     def unhide_item(self, item_id):
-        """Unhide an item_id from the treeview if it is currently not visible.
+        """
+        Unhide an item_id from the treeview if it is currently not visible.
         
         Reattach item to the end of the treeview. Reattach is an allias for Treeview.move(item, parent, index)
         Documenation : https://docs.python.org/3/library/tkinter.ttk.html#tkinter.ttk.Treeview.reattach
@@ -302,7 +316,8 @@ class Table():
             self.hidden_items.remove(item_id)
 
     def delete_table(self):
-        """Currently un-used method that will all items in the table.
+        """
+        Currently un-used method that will all items in the table.
         
         Should be avoided using. Will require re-running self.draw_table with a weapon_list
         to continue functionality.
@@ -310,7 +325,8 @@ class Table():
         self.treeview.delete(self.treeview.get_children())
 
 class FilterMenu():
-    """Container for multiple Tkinter Objects that make filters for sorting a Table object
+    """
+    Container for multiple Tkinter Objects that make filters for sorting a Table object
 
     Generate filter Listboxes that contain all Tags, Categorys, CP Cost. When clicked / updated trigger callback function assigned at __init__
 
@@ -352,7 +368,8 @@ class FilterMenu():
         }
 
     def __init__(self, root : Tk, weapons_list : list[Weapon], filter_callback):
-        """Create Tkinter elements based on inputted weapon_list, and trigger callback function when selections are made.
+        """
+        Create Tkinter elements based on inputted weapon_list, and trigger callback function when selections are made.
 
         Update and maintain a list of _filters when clicked based on the weapons "Tags", "Categorys", "Names", and "CPs".
         Generates Tags, Categorys, and CPs as a list_box that is selectable in the UI root frame
